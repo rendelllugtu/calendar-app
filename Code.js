@@ -30,14 +30,15 @@ const RP_EMAILS = {
   "Cecille Lumbria": "lumbriaces.pmnp.doh@gmail.com",
   "Kay Legaspi": "kaydizon54@gmail.com",
   "Mark Reblora": "i.mark.reblora@gmail.com",
-  "Mary Rose Comendador": "mayryrose.lumbria.comendador@gmail.com",
-  "MK Nolledo": "mariakathlynn@gmail.com",
+  "Mary Rose Comendador": "maryrose.lumbria.comendador@gmail.com",
+  "MK Nolledo": "mariakathlynnn@gmail.com",
   "Jonathan Anat": "jo.anatflores13@gmail.com",
   "Paul Vicuña": "paulangelo.vicuna@yahoo.com",
   "Emmanuel Umali": "manuel.umali16@gmail.com",
   "Genella Moreno": "genellafsmoreno@gmail.com",
   "Cielo Cruz": "cielolaleicruz@gmail.com",
   "Lau Tamondong": "lauren.tamondong@gmail.com",
+  "Kent Solibaga": "jksolibaga.rnd@gmail.com",
   "PDOHO Quezon": "pdohoquezon.nutrition@gmail.com"
 };
 
@@ -91,37 +92,86 @@ function getCalendarData() {
   data.shift();
 
   const people = new Set([
-    "Katherine Andujare","Rendell Lugtu","Krisha Cajucom","Emerene Pingol",
-    "Jodel Castillo","Camille Castañeda","Cecille Lumbria","Mark Reblora",
-    "Kay Legaspi","Mary Rose Comendador","MK Nolledo","Jonathan Anat",
-    "Paul Vicuña","Emmanuel Umali","Genella Moreno","Cielo Cruz","Lau Tamondong","PDOHO Quezon","Refer","Unassigned","Deny"
+    "Katherine Andujare", "Rendell Lugtu", "Krisha Cajucom", "Emerene Pingol",
+    "Jodel Castillo", "Camille Castañeda", "Cecille Lumbria", "Mark Reblora",
+    "Kay Legaspi", "Mary Rose Comendador", "MK Nolledo", "Jonathan Anat",
+    "Paul Vicuña", "Emmanuel Umali", "Genella Moreno", "Cielo Cruz", "Lau Tamondong", 
+    "Kent Solibaga", "PDOHO Quezon", "Refer", "Unassigned", "Deny"
   ]);
 
   const events = [];
 
+  // Fetch the Staff Leave Sheet data
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+  const leaveData = leaveSheet.getDataRange().getValues();
+  leaveData.shift(); // Remove headers
+
+  // Iterate through all data in the main sheet
   data.forEach((r, i) => {
     if (!r[10]) return;
+
     const start = new Date(r[10]);
     const end = r[12] ? new Date(r[12]) : new Date(r[10]);
     end.setDate(end.getDate() + 1);
 
+    const assigned = r[17] || "Unassigned";
+    const status = r[18] || "";  // 🔥 STATUS COLUMN (Column 19 in sheet)
 
-    people.add(r[17] || "Unassigned");
+    people.add(assigned);
+
+    // 🔥 Default color (Assigned / Pending)
+    let bgColor = "#3788d8"; // blue
+    let titlePrefix = "";
+
+    if (status === "Conducted") {
+      bgColor = "#28a745"; // green
+      titlePrefix = "✔ ";
+    }
+
+    if (status === "Denied") {
+      bgColor = "#dc3545"; // red
+    }
+
+    if (status === "Referred") {
+      bgColor = "#fd7e14"; // orange
+    }
+
+    const title = `${titlePrefix}${r[6]} — ${assigned} (${r[1]})`;
+
+    // Check if assigned staff is on leave during this activity's time period
+    let personIsOnLeave = false;
+
+    leaveData.forEach((leaveRecord) => {
+      const leaveName = leaveRecord[0];  // Staff Name from Leave sheet
+      const leaveStart = new Date(leaveRecord[1]);
+      const leaveEnd = leaveRecord[2] ? new Date(leaveRecord[2]) : new Date(leaveRecord[1]);
+      leaveEnd.setDate(leaveEnd.getDate() + 1);
+
+      // If assigned staff is on leave during the activity period
+      if (assigned === leaveName && start <= leaveEnd && end >= leaveStart) {
+        personIsOnLeave = true;
+      }
+    });
 
     events.push({
-    id: i + 2,
-    title: `${r[6]} — ${r[17] || "Unassigned"} (${r[1]})`,
-    start: start.toISOString(),
-    end: end.toISOString(),
-    extendedProps: {
-    row: i + 2,
-    type: r[6],          // Activity / Type
-    assigned: r[17] || "Unassigned",
-    endUser: r[1],        // Requester / End user
-    municipality: r[4],
-    activityTitle: r[8]
-  }
-  });
+      id: i + 2,
+      title: title,
+      start: Utilities.formatDate(start, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      end: Utilities.formatDate(end, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      allDay: true,
+      backgroundColor: bgColor,
+      borderColor: bgColor,
+      extendedProps: {
+        row: i + 2,
+        type: r[6],
+        assigned: assigned,
+        status: status,
+        endUser: r[1],
+        municipality: r[4],
+        activityTitle: r[8],
+        personIsOnLeave: personIsOnLeave  // Add the leave status to extendedProps
+      }
+    });
   });
 
   return { events, people: [...people].sort() };
@@ -161,7 +211,6 @@ function updateAssignedPerson(rowId, peopleStr) {
 
   sendEmailToRequester_(row);
   sendEmailToAssignedRPs_(row);
-  queueRequestSummary(row);
 
   return "Assignment updated successfully";
 }
@@ -235,71 +284,6 @@ PMNP RPMO CALABARZON
 
     MailApp.sendEmail(rpEmail, subject, body);
   });
-}
-
-
-/*************************************************************
- * SUMMARY QUEUE
- *************************************************************/
-function queueRequestSummary(row) {
-  const p = PropertiesService.getScriptProperties();
-  const q = JSON.parse(p.getProperty("SUMMARY_QUEUE") || "[]");
-  if (!q.includes(row)) q.push(row);
-  p.setProperty("SUMMARY_QUEUE", JSON.stringify(q));
-
-  ScriptApp.newTrigger("processSummaryQueue")
-    .timeBased().after(5000).create();
-}
-
-function processSummaryQueue() {
-  const p = PropertiesService.getScriptProperties();
-  const q = JSON.parse(p.getProperty("SUMMARY_QUEUE") || "[]");
-  if (!q.length) return;
-
-  createRequestSummary(q.shift());
-  p.setProperty("SUMMARY_QUEUE", JSON.stringify(q));
-}
-
-/*************************************************************
- * CREATE REQUEST SUMMARY (TEMPLATE)
- *************************************************************/
-function createRequestSummary(row) {
-  if (!row || row < 2) throw new Error("Invalid row");
-
-  const sheet = SpreadsheetApp.getActive()
-    .getSheetByName("Form Responses 1");
-
-  const municipality = sheet.getRange(row, 5).getValue();
-  const title        = sheet.getRange(row, 9).getValue();
-  const start        = sheet.getRange(row,11).getDisplayValue();
-  const end          = sheet.getRange(row,13).getDisplayValue();
-  const assigned     = sheet.getRange(row,18).getValue();
-
-  const converted = Drive.Files.copy(
-    { name: `Request Summary - ${municipality} (${title})`, mimeType: MimeType.GOOGLE_DOCS },
-    TEMPLATE_DOC_ID
-  );
-
-  const file = DriveApp.getFileById(converted.id);
-  const folder = DriveApp.getFolderById(SUMMARY_FOLDER_ID);
-  folder.addFile(file);
-  DriveApp.getRootFolder().removeFile(file);
-
-  const doc = DocumentApp.openById(converted.id);
-  const body = doc.getBody();
-
-  body.replaceText("Name of Personnel:\\s*", `Name of Personnel: ${assigned}\n`);
-  body.replaceText("Purpose\\/\\s*Title of Activity:\\s*", `Purpose/ Title of Activity: ${title}\n`);
-  body.replaceText("Destination:\\s*", `Destination: ${municipality}\n`);
-  body.replaceText("Date:\\s*", `Date: ${start} - ${end}\n`);
-
-  doc.saveAndClose();
-
-  sheet.getRange(row, 25).setFormula(
-    `=HYPERLINK("https://docs.google.com/document/d/${converted.id}", "View Summary")`
-  );
-
-  return "✅ Summary created successfully";
 }
 
 /*************************************************************
@@ -627,3 +611,118 @@ PMNP RPMO CALABARZON
   });
 }
 
+function getStaffOnLeaveForDate(rowId) {
+
+  const row = Number(rowId);
+
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+
+  const activityStart = new Date(sh.getRange(row, 11).getValue());
+  const activityEnd = sh.getRange(row, 13).getValue()
+    ? new Date(sh.getRange(row, 13).getValue())
+    : new Date(activityStart);
+
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave"); // 🔥 match your tab name exactly
+  if (!leaveSheet) return [];
+
+  const leaveData = leaveSheet.getDataRange().getValues();
+  leaveData.shift();
+
+  const staffOnLeave = [];
+
+  leaveData.forEach(r => {
+
+    const leaveName = String(r[0]).trim().toLowerCase();
+    const leaveStart = new Date(r[1]);
+    const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+    leaveEnd.setDate(leaveEnd.getDate() + 1);
+
+    if (
+      activityStart <= leaveEnd &&
+      activityEnd >= leaveStart
+    ) {
+      staffOnLeave.push(leaveName);
+    }
+
+  });
+
+  return staffOnLeave;
+}
+
+function getUnavailableStaffForDate(rowId) {
+
+  const row = Number(rowId);
+  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+  const data = sh.getDataRange().getValues();
+  data.shift();
+
+  const activityStart = new Date(sh.getRange(row, 11).getValue());
+  const activityEnd = sh.getRange(row, 13).getValue()
+    ? new Date(sh.getRange(row, 13).getValue())
+    : new Date(activityStart);
+
+  activityStart.setHours(0,0,0,0);
+  activityEnd.setHours(23,59,59,999);
+
+  const unavailable = new Set();
+
+  // 🔥 CHECK OTHER ACTIVITIES
+  data.forEach((r, i) => {
+
+    const currentRow = i + 2;
+    if (currentRow === row) return;
+
+    const status = (r[18] || "").toLowerCase();
+    if (status === "denied" || status === "referred") return;
+
+    const assigned = String(r[17] || "").trim();
+    if (!assigned) return;
+
+    const otherStart = new Date(r[10]);
+    const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
+
+    otherStart.setHours(0,0,0,0);
+    otherEnd.setHours(23,59,59,999);
+
+    if (
+      activityStart <= otherEnd &&
+      activityEnd >= otherStart
+    ) {
+      assigned.split(",").forEach(name => {
+        unavailable.add(name.trim().toLowerCase());
+      });
+    }
+
+  });
+
+  // 🔥 CHECK LEAVE
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+  if (leaveSheet) {
+
+    const leaveData = leaveSheet.getDataRange().getValues();
+    leaveData.shift();
+
+    leaveData.forEach(r => {
+
+      const leaveName = String(r[0]).trim().toLowerCase();
+      const leaveStart = new Date(r[1]);
+      const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+      leaveStart.setHours(0,0,0,0);
+      leaveEnd.setHours(23,59,59,999);
+
+      if (
+        activityStart <= leaveEnd &&
+        activityEnd >= leaveStart
+      ) {
+        unavailable.add(leaveName);
+      }
+
+    });
+  }
+
+  Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
+
+  return [...unavailable];
+}

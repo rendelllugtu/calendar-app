@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <style>
       body {
         font-family: "Poppins", sans-serif;
-        background: #f4f6f8;
+        background: linear-gradient(135deg, #ff9a44, #20c997);
         margin: 0;
         padding: 30px;
       }
@@ -57,7 +58,7 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 100;
+        z-index: 10000;
         left: 0; top: 0;
         width: 100%; height: 100%;
         background: rgba(0,0,0,0.5);
@@ -69,6 +70,8 @@
         width: 90%;
         max-width: 500px;
         border-radius: 8px;
+        position: relative;
+        z-index: 10001;
       }
       .loader {
         border: 6px solid #f3f3f3;
@@ -93,6 +96,7 @@
         text-align: center;
         color: #333;
         font-size: 18px;
+        pointer-events: none;
       }
       .photo-preview {
         display: flex;
@@ -215,7 +219,7 @@
 
         <div style="margin-top:15px;text-align:right;">
           <button class="btn" id="saveAssign">Save</button>
-          <button class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
+          <button type="button" class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
         </div>
       </div>
     </div>
@@ -229,13 +233,14 @@
         <select id="activityStatus">
           <option value="Conducted">Conducted</option>
           <option value="Not Conducted">Not Conducted</option>
+          <option value="Rescheduled">Rescheduled</option>
         </select>
         <p><strong>Upload Photos (1–3):</strong></p>
         <input type="file" id="photoInput" accept="image/*" multiple />
         <div class="photo-preview" id="photoPreview"></div>
         <div style="margin-top:15px;text-align:right;">
           <button class="btn" id="saveUpdate">Save Update</button>
-          <button class="btn" style="background:#888;" id="cancelUpdate">Cancel</button>
+          <button type="button" class="btn" style="background:#888;" id="cancelUpdate">Cancel</button>
         </div>
       </div>
     </div>
@@ -249,6 +254,7 @@
     <script>
       let allEvents = [];
       let selectedEvent = null;
+      let calendar;
 
       // ===== Custom Hover Tooltip =====
 let tooltip = document.createElement("div");
@@ -256,92 +262,131 @@ tooltip.className = "custom-tooltip";
 document.body.appendChild(tooltip);
 
       document.addEventListener("DOMContentLoaded", function () {
-        const personFilter = document.getElementById("personFilter");
-        const modal = document.getElementById("assignModal");
-        const eventInfo = document.getElementById("eventInfo");
 
-        showLoading(true);
-        google.script.run.withSuccessHandler((data) => {
-          showLoading(false);
-          const { events, people } = data;
-          allEvents = events;
+  const personFilter = document.getElementById("personFilter");
+  const assignMenu = document.getElementById("assignMenu");
 
-          // Build filter dropdown
-          personFilter.innerHTML = '<option value="all">All</option>';
-          people.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p;
-            opt.textContent = p;
-            personFilter.appendChild(opt);
-          });
+  // 🔥 Load people from backend
+  google.script.run
+    .withSuccessHandler(function(data) {
 
-          // Build Assign Dropdown with Checkboxes
-          const assignMenu = document.getElementById("assignMenu");
-          assignMenu.innerHTML = "";
-          people.forEach(p => {
-            const label = document.createElement("label");
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.value = p;
-            checkbox.onchange = updateAssignHidden;
-            label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(p));
-            assignMenu.appendChild(label);
-          });
+      const people = data.people;
 
-          // Calendar setup
-          const calendarEl = document.getElementById("calendar");
-          const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: "dayGridMonth",
-            height: "auto",
-            headerToolbar: {
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,listMonth"
-            },
-            events: allEvents,
-            eventDidMount: function (info) {
+      // Build filter dropdown
+      personFilter.innerHTML = '<option value="all">All</option>';
 
-  info.el.addEventListener("mouseenter", function (e) {
-    const details = info.event.extendedProps;
+      people.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        personFilter.appendChild(opt);
+      });
 
-    tooltip.innerHTML = `
-      <div style="font-weight:600; font-size:14px; margin-bottom:6px;">
-        ${details.activityTitle || "No Title"}
-      </div>
-      <div><strong>Activity Type:</strong> ${details.type}</div>
-      <div><strong>Assigned:</strong> ${details.assigned || "Unassigned"}</div>
-      <div><strong>Municipality:</strong> ${details.municipality || "N/A"}</div>
-      <div><strong>End User:</strong> ${details.endUser || ""}</div>
-    `;
+      // Build Assign Dropdown
+      assignMenu.innerHTML = "";
 
-    tooltip.style.display = "block";
-    tooltip.style.top = e.pageY + 12 + "px";
-    tooltip.style.left = e.pageX + 12 + "px";
+      people.forEach(p => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+
+        checkbox.type = "checkbox";
+        checkbox.value = p;
+        checkbox.onchange = updateAssignHidden;
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(p));
+        assignMenu.appendChild(label);
+      });
+
+    })
+    .withFailureHandler(function(err){
+      console.error(err);
+      alert("Error loading people.");
+    })
+    .getCalendarData();
+
+
+  // ✅ ADD THIS (Cancel Update button fix)
+  document.getElementById("cancelUpdate").addEventListener("click", function () {
+    document.getElementById("updateModal").style.display = "none";
+    document.getElementById("photoInput").value = "";
+    document.getElementById("photoPreview").innerHTML = "";
   });
 
-  info.el.addEventListener("mousemove", function (e) {
-    tooltip.style.top = e.pageY + 12 + "px";
-    tooltip.style.left = e.pageX + 12 + "px";
+});
+
+  // 🔥 Calendar setup
+  const calendarEl = document.getElementById("calendar");
+
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "dayGridMonth",
+    height: "auto",
+    headerToolbar: {
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,timeGridWeek,listMonth"
+    },
+
+    // 🔥 Dynamic event loading
+    events: function(fetchInfo, successCallback, failureCallback) {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          successCallback(data.events);
+        })
+        .withFailureHandler(function(err) {
+          console.error(err);
+          failureCallback(err);
+        })
+        .getCalendarData();
+    },
+
+    // 🔥 TOOLTIP PRESERVED
+    eventDidMount: function (info) {
+
+      info.el.addEventListener("mouseenter", function (e) {
+        const details = info.event.extendedProps;
+
+        tooltip.innerHTML = `
+          <div style="font-weight:600; font-size:14px; margin-bottom:6px;">
+            ${details.activityTitle || "No Title"}
+          </div>
+          <div><strong>Activity Type:</strong> ${details.type}</div>
+          <div><strong>Assigned:</strong> ${details.assigned || "Unassigned"}</div>
+          <div><strong>Municipality:</strong> ${details.municipality || "N/A"}</div>
+          <div><strong>End User:</strong> ${details.endUser || ""}</div>
+        `;
+
+        tooltip.style.display = "block";
+        tooltip.style.top = e.pageY + 12 + "px";
+        tooltip.style.left = e.pageX + 12 + "px";
+      });
+
+      info.el.addEventListener("mousemove", function (e) {
+        tooltip.style.top = e.pageY + 12 + "px";
+        tooltip.style.left = e.pageX + 12 + "px";
+      });
+
+      info.el.addEventListener("mouseleave", function () {
+        tooltip.style.display = "none";
+      });
+
+    },
+
+    eventClick: function(info) {
+      selectedEvent = info.event;
+      const details = info.event.extendedProps;
+
+      const choice = confirm(
+        `You clicked "${info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
+      );
+
+      if (choice) openUpdateModal(details, info.event.id);
+      else openAssignModal(details);
+    }
   });
 
-  info.el.addEventListener("mouseleave", function () {
-    tooltip.style.display = "none";
-  });
-
-},
-
-
-            eventClick: function (info) {
-              selectedEvent = info.event;
-              const details = info.event.extendedProps;
-              const choice = confirm(`You clicked "${info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`);
-              if (choice) openUpdateModal(details, info.event.id);
-              else openAssignModal(details, info.event.id);
-            }
-          });
-          calendar.render();
-
+  calendar.render();
+  
           // Filter handler
           personFilter.addEventListener("change", function () {
             const selected = this.value;
@@ -354,33 +399,30 @@ document.body.appendChild(tooltip);
 
           // Save assign
           document.getElementById("saveAssign").addEventListener("click", function () {
-            const newPerson = document.getElementById("assignHidden").value;
-            if (selectedEvent) {
-              showLoading(true);
-              google.script.run.withSuccessHandler((msg) => {
-                showLoading(false);
-                alert("✅ " + msg);
 
-                selectedEvent.setExtendedProp("assigned", newPerson);
-                const details = selectedEvent.extendedProps;
-                const newTitle = `${details.type} — ${newPerson} (${details.endUser})`;
-                selectedEvent.setProp("title", newTitle);
-                modal.style.display = "none";
+  const newPerson = document.getElementById("assignHidden").value;
+  if (!selectedEvent) return;
 
-                google.script.run.withSuccessHandler((data) => {
-                  allEvents = data.events;
-                  calendar.removeAllEvents();
-                  calendar.addEventSource(allEvents);
-                }).getCalendarData();
-              }).updateAssignedPerson(selectedEvent.extendedProps.row, newPerson)
-            }
-          });
+  showLoading(true);
 
-          document.getElementById("cancelAssign").onclick = () => {
-            modal.style.display = "none";
-          };
-        }).getCalendarData();
-      });
+  google.script.run
+    .withSuccessHandler(function () {
+
+      document.getElementById("assignModal").style.display = "none";
+
+      calendar.refetchEvents();
+
+      showLoading(false); // 🔥 IMPORTANT
+
+    })
+    .withFailureHandler(function(err) {
+      console.error(err);
+      showLoading(false); // 🔥 ALSO HERE
+      alert("Error updating assignment.");
+    })
+    .updateAssignedPerson(selectedEvent.extendedProps.row, newPerson);
+
+});
 
       // ===== Activity Update Modal =====
       function openUpdateModal(details, rowId) {
@@ -413,28 +455,109 @@ document.body.appendChild(tooltip);
           }
 
           if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-              const gps = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-              showLoading(true);
-              google.script.run.withSuccessHandler((msg) => {
-                showLoading(false);
-                alert(msg);
-                document.getElementById("updateModal").style.display = "none";
-                location.reload();
-              }).updateActivityStatus(rowId, status, photos, gps);
-            }, () => alert("⚠️ Unable to get GPS location."));
-          } else alert("GPS not supported.");
-        };
+  navigator.geolocation.getCurrentPosition((pos) => {
 
-        document.getElementById("cancelUpdate").onclick = () => {
-          document.getElementById("updateModal").style.display = "none";
+    const gps = {
+      lat: pos.coords.latitude,
+      lon: pos.coords.longitude
+    };
+
+    showLoading(true);
+
+    google.script.run
+      .withSuccessHandler((msg) => {
+        showLoading(false);
+        alert(msg);
+        document.getElementById("updateModal").style.display = "none";
+        location.reload();
+      })
+      .withFailureHandler((err) => {
+        showLoading(false);
+        console.error(err);
+        alert("Error updating activity.");
+      })
+      .updateActivityStatus(rowId, status, photos, gps);
+
+  }, () => {
+
+    // 🔥 GPS FAILED — BUT CONTINUE ANYWAY
+    console.warn("GPS unavailable. Continuing without GPS.");
+
+    showLoading(true);
+
+    google.script.run
+      .withSuccessHandler((msg) => {
+        showLoading(false);
+        alert(msg);
+        document.getElementById("updateModal").style.display = "none";
+        location.reload();
+      })
+      .withFailureHandler((err) => {
+        showLoading(false);
+        console.error(err);
+        alert("Error updating activity.");
+      })
+      .updateActivityStatus(rowId, status, photos, null); // 🔥 send null instead of blocking
+
+  });
+
+} else {
+
+  // 🔥 Browser doesn't support GPS — STILL CONTINUE
+  showLoading(true);
+
+  google.script.run
+    .withSuccessHandler((msg) => {
+      showLoading(false);
+      alert(msg);
+      document.getElementById("updateModal").style.display = "none";
+      location.reload();
+    })
+    .withFailureHandler((err) => {
+      showLoading(false);
+      console.error(err);
+      alert("Error updating activity.");
+    })
+    .updateActivityStatus(rowId, status, photos, null);
+
+}
+
         };
       }
 
       function openAssignModal(details) {
-        document.getElementById("assignModal").style.display = "block";
-        document.getElementById("eventInfo").innerText = `${details.type} — ${details.assigned} (${details.endUser})`;
-      }
+
+  document.getElementById("assignModal").style.display = "block";
+  document.getElementById("eventInfo").innerText =
+    `${details.type} — ${details.assigned} (${details.endUser})`;
+
+  google.script.run
+    .withSuccessHandler(function(unavailableStaff) {
+
+      console.log("Unavailable:", unavailableStaff);
+
+      const checkboxes = document.querySelectorAll("#assignMenu input");
+
+      checkboxes.forEach(cb => {
+
+        const name = cb.value.trim().toLowerCase();
+
+        if (unavailableStaff.includes(name)) {
+          cb.disabled = true;
+          cb.parentElement.style.opacity = 0.4;
+        } else {
+          cb.disabled = false;
+          cb.parentElement.style.opacity = 1;
+        }
+
+      });
+
+    })
+    .withFailureHandler(function(err){
+      console.error(err);
+    })
+    .getUnavailableStaffForDate(details.row); // 🔥 THIS IS THE IMPORTANT PART
+}
 
       function showLoading(show) {
         document.getElementById("loadingOverlay").style.display = show ? "block" : "none";
@@ -470,6 +593,18 @@ document.body.appendChild(tooltip);
           document.querySelectorAll(".dropdown").forEach(dd => dd.classList.remove("show"));
         }
       };
+
+      window.addEventListener("load", function () {
+
+  const cancelAssignBtn = document.getElementById("cancelAssign");
+
+  if (cancelAssignBtn) {
+    cancelAssignBtn.addEventListener("click", function () {
+      document.getElementById("assignModal").style.display = "none";
+    });
+  }
+
+});
     </script>
   </body>
 </html>
