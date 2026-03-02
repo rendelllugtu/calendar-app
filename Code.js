@@ -1,3 +1,61 @@
+function doGet(e) {
+  const action = e.parameter.action;
+  const body = e.parameter.data ? JSON.parse(e.parameter.data) : {};
+  let result;
+
+  if (action === "getCalendarData") {
+    result = getCalendarData();
+  }
+
+  if (action === "updateAssignedPerson") {
+    result = updateAssignedPerson(body.rowId, body.people);
+  }
+
+  if (action === "updateActivityStatus") {
+    result = updateActivityStatus(body.rowId, body.status, body.photos, body.gps);
+  }
+
+  if (action === "getUnavailableStaffForDate") {
+    result = getUnavailableStaffForDate(body.rowId);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.parameter.data);
+    let result = {};
+
+    if (body.action === "getCalendarData") {
+      result = getCalendarData();
+    }
+
+    if (body.action === "updateAssignedPerson") {
+      result = updateAssignedPerson(body.rowId, body.people);
+    }
+
+    if (body.action === "updateActivityStatus") {
+      result = updateActivityStatus(body.rowId, body.status, body.photos, body.gps);
+    }
+
+    if (body.action === "getUnavailableStaffForDate") {
+      result = getUnavailableStaffForDate(body.rowId);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 /************************************************
  * LOCAL DEVELOPMENT TEST FUNCTION
  ************************************************/
@@ -41,15 +99,6 @@ const RP_EMAILS = {
   "Kent Solibaga": "jksolibaga.rnd@gmail.com",
   "PDOHO Quezon": "pdohoquezon.nutrition@gmail.com"
 };
-
-/*************************************************************
- * WEB APP
- *************************************************************/
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile("index")
-    .setTitle("Request Calendar")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
 
 /*************************************************************
  * GEOJSON AUTO-FILL (SAFE)
@@ -462,7 +511,7 @@ function sendEmailOnFormSubmit(e) {
   const requestLetterLink = sheet.getRange(row, 15).getDisplayValue(); // Column O
 
   // 🔗 Short link to the main App Script / dashboard
-  const appScriptLink = "https://tinyurl.com/TAMEVer7";
+  const appScriptLink = "https://pmnpivacalendarapp.web.app/";
 
   const email = "jelliepalencia@gmail.com"; // 🔧 Replace with her actual email
   const subject = "🆕 New Form Response Submitted – Please Assign Activity";
