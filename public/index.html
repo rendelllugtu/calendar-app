@@ -8,13 +8,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <style>
-      .header-bar {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  padding: 15px 40px;
+     .header-bar {
+  padding: 20px 40px;
+  text-align: center;
 }
 
+/* Top logo row */
+.logo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Left & right groups */
 .left-group,
 .right-group {
   display: flex;
@@ -22,6 +28,7 @@
   align-items: center;
 }
 
+/* Logo sizing */
 .logo-box {
   height: 70px;
   display: flex;
@@ -33,10 +40,10 @@
   width: auto;
 }
 
+/* Title below logos */
 .page-title {
-  text-align: center;
-  margin: 0;
-  font-size: 28px;
+  margin-top: 20px;
+  font-size: 32px;
   font-weight: bold;
 }
 
@@ -237,28 +244,34 @@
   <body>
     <div class="header-bar">
 
-  <div class="left-group">
-    <div class="logo-box">
-      <img src="images/logos/logo1.png" alt="Logo 1">
+  <!-- 🔹 Top Row - Logos -->
+  <div class="logo-row">
+
+    <div class="left-group">
+      <div class="logo-box">
+        <img src="images/logos/logo1.png" alt="Logo 1">
+      </div>
+      <div class="logo-box">
+        <img src="images/logos/logo2.png" alt="Logo 2">
+      </div>
+      <div class="logo-box">
+        <img src="images/logos/logo3.png" alt="Logo 3">
+      </div>
     </div>
-    <div class="logo-box">
-      <img src="images/logos/logo2.png" alt="Logo 2">
+
+    <div class="right-group">
+      <div class="logo-box">
+        <img src="images/logos/logo4.png" alt="Logo 4">
+      </div>
+      <div class="logo-box">
+        <img src="images/logos/logo5.png" alt="Logo 5">
+      </div>
     </div>
-    <div class="logo-box">
-      <img src="images/logos/logo3.png" alt="Logo 3">
-    </div>
+
   </div>
 
+  <!-- 🔹 Title Below Logos -->
   <h1 class="page-title">📅 Request Calendar</h1>
-
-  <div class="right-group">
-    <div class="logo-box">
-      <img src="images/logos/logo4.png" alt="Logo 4">
-    </div>
-    <div class="logo-box">
-      <img src="images/logos/logo5.png" alt="Logo 5">
-    </div>
-  </div>
 
 </div>
 
