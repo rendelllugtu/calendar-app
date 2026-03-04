@@ -401,31 +401,43 @@ document.body.appendChild(tooltip);
 
       const people = data.people;
 
-      // Build filter dropdown
-      personFilter.innerHTML = '<option value="all">All</option>';
+// Split combined names and remove duplicates
+const uniquePeople = new Set();
 
-      people.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.textContent = p;
-        personFilter.appendChild(opt);
-      });
+people.forEach(p => {
+  p.split(",").forEach(name => {
+    const clean = name.trim();
+    if (clean) uniquePeople.add(clean);
+  });
+});
 
-      // Build Assign Dropdown
-      assignMenu.innerHTML = "";
+const peopleList = Array.from(uniquePeople).sort();
 
-      people.forEach(p => {
-        const label = document.createElement("label");
-        const checkbox = document.createElement("input");
+// Build filter dropdown
+personFilter.innerHTML = '<option value="all">All</option>';
 
-        checkbox.type = "checkbox";
-        checkbox.value = p;
-        checkbox.onchange = updateAssignHidden;
+peopleList.forEach(p => {
+  const opt = document.createElement("option");
+  opt.value = p;
+  opt.textContent = p;
+  personFilter.appendChild(opt);
+});
 
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(p));
-        assignMenu.appendChild(label);
-      });
+// Build Assign Dropdown
+assignMenu.innerHTML = "";
+
+peopleList.forEach(p => {
+  const label = document.createElement("label");
+  const checkbox = document.createElement("input");
+
+  checkbox.type = "checkbox";
+  checkbox.value = p;
+  checkbox.onchange = updateAssignHidden;
+
+  label.appendChild(checkbox);
+  label.appendChild(document.createTextNode(p));
+  assignMenu.appendChild(label);
+});
 
     })
     .catch(function(err){
@@ -516,14 +528,27 @@ document.body.appendChild(tooltip);
   calendar.render();
   
           // Filter handler
-          personFilter.addEventListener("change", function () {
-            const selected = this.value;
-            const filtered = selected === "all"
-              ? allEvents
-              : allEvents.filter(ev => ev.extendedProps.assigned === selected);
-            calendar.removeAllEvents();
-            calendar.addEventSource(filtered);
-          });
+          // Filter handler
+personFilter.addEventListener("change", function () {
+
+  const selected = this.value;
+
+  const filtered = selected === "all"
+    ? allEvents
+    : allEvents.filter(ev => {
+
+        const assigned = ev.extendedProps.assigned || "";
+
+        // split names and trim spaces
+        const assignedPeople = assigned.split(",").map(n => n.trim());
+
+        return assignedPeople.includes(selected);
+      });
+
+  calendar.removeAllEvents();
+  calendar.addEventSource(filtered);
+
+});
 
           // Save assign
           document.getElementById("saveAssign").addEventListener("click", function () {
