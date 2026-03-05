@@ -473,9 +473,39 @@ peopleList.forEach(p => {
   apiCall("getCalendarData")
   .then(data => {
 
-    allEvents = data.events;
-    
-    successCallback(data.events);
+    const statusColors = {
+      "Conducted": "#28a745",     // green
+      "Assigned": "#3788d8",      // blue
+      "Unassigned": "#3788d8",    // blue
+      "Not Conducted": "#ffc107", // yellow
+      "Rescheduled": "#dc3545",   // red
+      "Cancelled": "#6c757d"      // grey
+    };
+
+    const coloredEvents = data.events.map(ev => {
+
+      const status = ev.extendedProps?.status || "Assigned";
+
+      // Add icons if you want
+      let title = ev.title;
+
+      if (status === "Conducted") title = "✔ " + title;
+      if (status === "Rescheduled") title = "🔁 " + title;
+      if (status === "Cancelled") title = "✖ " + title;
+      if (status === "Not Conducted") title = "⚠ " + title;
+
+      return {
+        ...ev,
+        title: title,
+        color: statusColors[status] || "#3788d8"
+      };
+
+    });
+
+    allEvents = coloredEvents;
+
+    successCallback(coloredEvents);
+
   })
   .catch(err => {
     console.error(err);
