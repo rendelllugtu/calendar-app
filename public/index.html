@@ -289,24 +289,26 @@
     </div>
 
     <!-- Assign Modal -->
-    <div id="assignModal" class="modal">
-      <div class="modal-content">
-        <h3>Assign Person</h3>
-        <p id="eventInfo"></p>
+<div id="assignModal" class="modal">
+  <div class="modal-content">
+    <h3>Assign Person</h3>
 
-        <label>Select Person(s):</label>
-        <div class="dropdown">
-          <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">Select Person(s)</button>
-          <div id="assignMenu" class="dropdown-content"></div>
-        </div>
-        <input type="hidden" id="assignHidden" />
+    <div id="assignInfo" style="margin-bottom:12px;"></div>
 
-        <div style="margin-top:15px;text-align:right;">
-          <button class="btn" id="saveAssign">Save</button>
-          <button type="button" class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
-        </div>
-      </div>
+    <label>Select Person(s):</label>
+    <div class="dropdown">
+      <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">Select Person(s)</button>
+      <div id="assignMenu" class="dropdown-content"></div>
     </div>
+
+    <input type="hidden" id="assignHidden" />
+
+    <div style="margin-top:15px;text-align:right;">
+      <button class="btn" id="saveAssign">Save</button>
+      <button type="button" class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
+    </div>
+  </div>
+</div>
 
     <!-- Update Activity Modal -->
     <div id="updateModal" class="modal">
