@@ -486,18 +486,23 @@ peopleList.forEach(p => {
 
       const status = ev.extendedProps?.status || "Assigned";
 
-      // Add icons if you want
       let title = ev.title;
 
-      if (status === "Conducted") title = "✔ " + title;
+      if (status === "Conducted") title = title;
       if (status === "Rescheduled") title = "🔁 " + title;
       if (status === "Cancelled") title = "✖ " + title;
       if (status === "Not Conducted") title = "⚠ " + title;
 
       return {
         ...ev,
+
         title: title,
-        color: statusColors[status] || "#3788d8"
+
+        // ⭐ IMPORTANT: override both properties
+        color: statusColors[status] || "#3788d8",
+        backgroundColor: statusColors[status] || "#3788d8",
+        borderColor: statusColors[status] || "#3788d8"
+
       };
 
     });
