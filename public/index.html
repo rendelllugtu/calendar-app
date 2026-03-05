@@ -479,6 +479,7 @@ peopleList.forEach(p => {
       "Unassigned": "#3788d8",    // blue
       "Not Conducted": "#ffc107", // yellow
       "Rescheduled": "#dc3545",   // red
+      "Denied": "#dc3545",   // red
       "Cancelled": "#6c757d"      // grey
     };
 
@@ -492,6 +493,7 @@ peopleList.forEach(p => {
       if (status === "Rescheduled") title = "🔁 " + title;
       if (status === "Cancelled") title = "✖ " + title;
       if (status === "Not Conducted") title = "⚠ " + title;
+      if (status === "Denied") title = "⚠ " + title;
 
       return {
         ...ev,
