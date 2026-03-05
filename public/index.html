@@ -383,7 +383,7 @@ async function apiCall(action, payload = {}) {
   document.getElementById("updateModal").style.display = "block";
 
   document.getElementById("updateInfo").innerText =
-    `${details.type} — ${details.assigned} (${details.endUser})`;
+  `${details.activityTitle} — ${details.assigned || "Unassigned"} (${details.endUser})`;
 }
 
       // ===== Custom Hover Tooltip =====
@@ -558,8 +558,8 @@ peopleList.forEach(p => {
       const details = info.event.extendedProps;
 
       const choice = confirm(
-        `You clicked "${info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
-      );
+  `You clicked "${details.activityTitle || info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
+);
 
       if (choice) openUpdateModal(details, info.event.id);
       else openAssignModal(details);
