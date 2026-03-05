@@ -318,6 +318,7 @@
           <option value="Conducted">Conducted</option>
           <option value="Not Conducted">Not Conducted</option>
           <option value="Rescheduled">Rescheduled</option>
+          <option value="Cancelled">Cancelled</option>
         </select>
         <p><strong>Upload Photos (1–3):</strong></p>
         <input type="file" id="photoInput" accept="image/*" multiple />
@@ -471,6 +472,9 @@ peopleList.forEach(p => {
 
   apiCall("getCalendarData")
   .then(data => {
+
+    allEvents = data.events;
+    
     successCallback(data.events);
   })
   .catch(err => {
@@ -527,7 +531,6 @@ peopleList.forEach(p => {
 
   calendar.render();
   
-          // Filter handler
           // Filter handler
 personFilter.addEventListener("change", function () {
 
