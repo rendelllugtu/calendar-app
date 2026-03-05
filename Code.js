@@ -701,77 +701,90 @@ function getStaffOnLeaveForDate(rowId) {
 
 function getUnavailableStaffForDate(rowId) {
 
-  const row = Number(rowId);
-  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
-  const data = sh.getDataRange().getValues();
-  data.shift();
+const row = Number(rowId);
+const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+const data = sh.getDataRange().getValues();
+data.shift();
 
-  const activityStart = new Date(sh.getRange(row, 11).getValue());
-  const activityEnd = sh.getRange(row, 13).getValue()
-    ? new Date(sh.getRange(row, 13).getValue())
-    : new Date(activityStart);
+const activityStart = new Date(sh.getRange(row, 11).getValue());
+const activityEnd = sh.getRange(row, 13).getValue()
+? new Date(sh.getRange(row, 13).getValue())
+: new Date(activityStart);
 
-  activityStart.setHours(0,0,0,0);
-  activityEnd.setHours(23,59,59,999);
+activityStart.setHours(0,0,0,0);
+activityEnd.setHours(23,59,59,999);
 
-  const unavailable = new Set();
+const unavailable = new Set();
 
-  // 🔥 CHECK OTHER ACTIVITIES
-  data.forEach((r, i) => {
+// 🔒 Statuses that should NOT block availability
+const skipStatuses = ["denied","referred","cancelled","rescheduled"];
 
-    const currentRow = i + 2;
-    if (currentRow === row) return;
+// 🔥 CHECK OTHER ACTIVITIES
+data.forEach((r, i) => {
 
-    const status = (r[18] || "").toLowerCase();
-    if (status === "denied" || status === "referred") return;
+const currentRow = i + 2;
+if (currentRow === row) return;
 
-    const assigned = String(r[17] || "").trim();
-    if (!assigned) return;
+const status = String(r[18] || "").toLowerCase().trim();
 
-    const otherStart = new Date(r[10]);
-    const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
+// Skip activities that should not block staff
+if (skipStatuses.includes(status)) return;
 
-    otherStart.setHours(0,0,0,0);
-    otherEnd.setHours(23,59,59,999);
+const assigned = String(r[17] || "").trim();
+if (!assigned) return;
 
-    if (
-      activityStart <= otherEnd &&
-      activityEnd >= otherStart
-    ) {
-      assigned.split(",").forEach(name => {
-        unavailable.add(name.trim().toLowerCase());
-      });
-    }
+const otherStart = new Date(r[10]);
+const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
+
+otherStart.setHours(0,0,0,0);
+otherEnd.setHours(23,59,59,999);
+
+// 🔒 Prevent double booking when dates overlap
+if (
+  activityStart <= otherEnd &&
+  activityEnd >= otherStart
+) {
+  assigned.split(",").forEach(name => {
+
+    const cleaned = name.trim().toLowerCase();
+    if (cleaned) unavailable.add(cleaned);
 
   });
+}
 
-  // 🔥 CHECK LEAVE
-  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
-  if (leaveSheet) {
 
-    const leaveData = leaveSheet.getDataRange().getValues();
-    leaveData.shift();
+});
 
-    leaveData.forEach(r => {
+// 🔥 CHECK LEAVE
+const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+if (leaveSheet) {
 
-      const leaveName = String(r[0]).trim().toLowerCase();
-      const leaveStart = new Date(r[1]);
-      const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
 
-      leaveStart.setHours(0,0,0,0);
-      leaveEnd.setHours(23,59,59,999);
+const leaveData = leaveSheet.getDataRange().getValues();
+leaveData.shift();
 
-      if (
-        activityStart <= leaveEnd &&
-        activityEnd >= leaveStart
-      ) {
-        unavailable.add(leaveName);
-      }
+leaveData.forEach(r => {
 
-    });
+  const leaveName = String(r[0]).trim().toLowerCase();
+  const leaveStart = new Date(r[1]);
+  const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+  leaveStart.setHours(0,0,0,0);
+  leaveEnd.setHours(23,59,59,999);
+
+  if (
+    activityStart <= leaveEnd &&
+    activityEnd >= leaveStart
+  ) {
+    unavailable.add(leaveName);
   }
 
-  Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
+});
 
-  return [...unavailable];
+
+}
+
+Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
+
+return [...unavailable];
 }
