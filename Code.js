@@ -806,14 +806,20 @@ data.forEach(r=>{
 
 stats.total++;
 
-const status = (r[18] || "").toString().trim();
-const assigned = (r[17] || "").toString().trim();
-const type = (r[6] || "").toString().trim().toLowerCase();
-const municipality = (r[4] || "").toString().trim().toLowerCase();
+const municipality=(r[4]||"").toString().trim().toLowerCase();
+const type=(r[6]||"").toString().trim().toLowerCase();
+const assigned=(r[17]||"").toString().trim();
+const status=(r[18]||"").toString().trim().toLowerCase();
 
-if(status==="Conducted") stats.conducted++;
-if(status==="Denied") stats.denied++;
-if(status==="Referred") stats.referred++;
+/* STATUS COUNTS */
+
+if(status==="conducted") stats.conducted++;
+
+if(status==="denied") stats.denied++;
+
+if(status==="referred") stats.referred++;
+
+/* ASSIGNED / UNASSIGNED */
 
 if(assigned && assigned!=="Unassigned"){
 stats.assigned++;
@@ -821,35 +827,38 @@ stats.assigned++;
 stats.unassigned++;
 }
 
+/* ACTIVITY TYPE */
+
 if(type){
 
-const key = type.toLowerCase().trim();
-
-stats.byType[key] = (stats.byType[key] || 0) + 1;
+stats.byType[type]=(stats.byType[type]||0)+1;
 
 }
+
+/* MUNICIPALITY */
 
 if(municipality){
 
-const key = municipality.toLowerCase().trim();
-
-stats.byMunicipality[key] = (stats.byMunicipality[key] || 0) + 1;
+stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
 
 }
 
-if (assigned) {
+/* STAFF */
 
-  assigned.split(",").forEach(name => {
+if(assigned){
 
-    const key = name.toLowerCase().trim();
+assigned.split(",").forEach(name=>{
 
-    if (!key) return;
+const key=name.trim().toLowerCase();
 
-    stats.byStaff[key] = (stats.byStaff[key] || 0) + 1;
+if(!key) return;
 
-  });
+stats.byStaff[key]=(stats.byStaff[key]||0)+1;
 
-  }
+});
+
+}
+
 });
 
 return stats;
