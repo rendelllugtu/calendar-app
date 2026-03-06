@@ -1,13 +1,15 @@
 function doGet(e) {
-  const action = e.parameter.action;
+
   const body = e.parameter.data ? JSON.parse(e.parameter.data) : {};
-  let result;
+  const action = body.action;
+
+  let result = {};
 
   if (action === "getCalendarData") {
     result = getCalendarData();
   }
 
-  if (body.action === "getDashboardStats") {
+  if (action === "getDashboardStats") {
     result = getDashboardStats();
   }
 
@@ -30,6 +32,7 @@ function doGet(e) {
 
 function doPost(e) {
   try {
+
     const body = JSON.parse(e.parameter.data);
     let result = {};
 
@@ -58,6 +61,7 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+
     return ContentService
       .createTextOutput(JSON.stringify({ error: err.message }))
       .setMimeType(ContentService.MimeType.JSON);
