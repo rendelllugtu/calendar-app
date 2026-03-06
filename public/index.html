@@ -239,6 +239,57 @@
   max-width: 280px;
 }
 
+/* =========================
+   DASHBOARD + CALENDAR LAYOUT
+========================= */
+
+.main-container{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+/* Dashboard panel */
+.dashboard{
+  width:260px;
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Calendar area */
+.calendar-container{
+  flex:1;
+}
+
+/* Dashboard cards */
+.card{
+  background:#f8f9fc;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:6px;
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+}
+
+/* Chart buttons */
+.dashboard button{
+  width:100%;
+  margin-top:10px;
+  padding:8px;
+  border:none;
+  background:#4e73df;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.dashboard button:hover{
+  background:#2e59d9;
+}
+
     </style>
   </head>
   <body>
@@ -332,6 +383,67 @@
       </div>
     </div>
 
+    <div class="main-container">
+
+  <!-- LEFT DASHBOARD -->
+  <div class="dashboard">
+
+    <h3>📊 Activity Dashboard</h3>
+
+    <div class="card">
+      <b>Total Activities</b>
+      <span id="totalActivities"></span>
+    </div>
+
+    <div class="card">
+      <b>Conducted</b>
+      <span id="conductedActivities"></span>
+    </div>
+
+    <div class="card">
+      <b>Assigned</b>
+      <span id="assignedActivities"></span>
+    </div>
+
+    <div class="card">
+      <b>Unassigned</b>
+      <span id="unassignedActivities"></span>
+    </div>
+
+    <div class="card">
+      <b>Denied</b>
+      <span id="deniedActivities"></span>
+    </div>
+
+    <div class="card">
+      <b>Referred</b>
+      <span id="referredActivities"></span>
+    </div>
+
+    <hr>
+
+    <!-- ACTIVITY TYPES -->
+    <h4>📋 Activity Types</h4>
+
+    <div id="activityTypes"></div>
+
+    <hr>
+
+    <button onclick="toggleMunicipalityChart()">Activities by Municipality</button>
+    <div id="municipalityChart" style="display:none"></div>
+
+    <button onclick="toggleStaffChart()">Activities by Staff</button>
+    <div id="staffChart" style="display:none"></div>
+
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="calendar-container">
+    <div id="calendar"></div>
+  </div>
+
+</div>
+
     <!-- Loading -->
     <div id="loadingOverlay">
       <div class="loader"></div>
@@ -392,6 +504,121 @@ async function apiCall(action, payload = {}) {
 let tooltip = document.createElement("div");
 tooltip.className = "custom-tooltip";
 document.body.appendChild(tooltip);
+
+// ==============================
+// DASHBOARD FUNCTIONS
+// ==============================
+
+function loadDashboard(){
+
+apiCall("getDashboardStats")
+.then(data=>{
+
+document.getElementById("totalActivities").innerText=data.total;
+document.getElementById("conductedActivities").innerText=data.conducted;
+document.getElementById("assignedActivities").innerText=data.assigned;
+document.getElementById("unassignedActivities").innerText=data.unassigned;
+document.getElementById("deniedActivities").innerText=data.denied;
+document.getElementById("referredActivities").innerText=data.referred;
+
+renderActivityTypes(data.byType);
+
+window.municipalityData=data.byMunicipality;
+window.staffData=data.byStaff;
+
+});
+
+}
+
+
+function renderActivityTypes(types){
+
+let html="";
+
+Object.entries(types).forEach(([type,count])=>{
+
+html+=`
+<div class="card">
+<b>${type}</b>
+<span>${count}</span>
+</div>
+`;
+
+});
+
+document.getElementById("activityTypes").innerHTML=html;
+
+}
+
+function toggleMunicipalityChart(){
+
+const div=document.getElementById("municipalityChart");
+
+if(div.style.display==="none"){
+div.style.display="block";
+renderMunicipalityChart();
+}else{
+div.style.display="none";
+}
+
+}
+
+function renderMunicipalityChart(){
+
+const data=window.municipalityData;
+
+let html="";
+
+Object.entries(data).forEach(([name,val])=>{
+
+html+=`
+<div style="margin:4px 0">
+${name}
+<div style="background:#3788d8;height:8px;width:${val*10}px"></div>
+${val}
+</div>
+`;
+
+});
+
+document.getElementById("municipalityChart").innerHTML=html;
+
+}
+
+function toggleStaffChart(){
+
+const div=document.getElementById("staffChart");
+
+if(div.style.display==="none"){
+div.style.display="block";
+renderStaffChart();
+}else{
+div.style.display="none";
+}
+
+}
+
+function renderStaffChart(){
+
+const data=window.staffData;
+
+let html="";
+
+Object.entries(data).forEach(([name,val])=>{
+
+html+=`
+<div style="margin:4px 0">
+${name}
+<div style="background:#28a745;height:8px;width:${val*10}px"></div>
+${val}
+</div>
+`;
+
+});
+
+document.getElementById("staffChart").innerHTML=html;
+
+}
 
       document.addEventListener("DOMContentLoaded", function () {
 
@@ -569,6 +796,9 @@ peopleList.forEach(p => {
   });
 
   calendar.render();
+
+  // Load dashboard stats
+  loadDashboard();
   
           // Filter handler
 personFilter.addEventListener("change", function () {
