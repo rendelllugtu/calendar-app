@@ -481,7 +481,7 @@ function verifyMunicipalityFromGPS_(row, gps) {
  * whenever a new form response is submitted
  *************************************************************/
 function sendEmailOnFormSubmit(e) {
-  const sheet = e.source.getActiveSheet();
+  const sheet = e.range.getSheet();
   if (sheet.getName() !== SHEET_NAME) return;
 
   const row = e.range.getRow();
