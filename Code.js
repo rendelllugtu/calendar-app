@@ -819,28 +819,34 @@ data.forEach(r=>{
 
 stats.total++;
 
-const status=r[18] || "";
-const assigned=r[17] || "";
-const type=r[6] || "Unknown";
-const municipality=r[4] || "Unknown";
+const status = (r[18] || "").toString();
+const assigned = (r[17] || "").toString();
+const type = (r[6] || "Unknown").toString();
+const municipality = (r[4] || "Unknown").toString();
 
-if(status==="Conducted") stats.conducted++;
-if(status==="Denied") stats.denied++;
-if(status==="Referred") stats.referred++;
+if(status === "Conducted") stats.conducted++;
+if(status === "Denied") stats.denied++;
+if(status === "Referred") stats.referred++;
 
-if(assigned && assigned!=="Unassigned"){
+if(assigned && assigned !== "Unassigned"){
 stats.assigned++;
 }else{
 stats.unassigned++;
 }
 
-stats.byType[type]=(stats.byType[type]||0)+1;
-stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
+stats.byType[type] = (stats.byType[type] || 0) + 1;
+
+stats.byMunicipality[municipality] =
+(stats.byMunicipality[municipality] || 0) + 1;
 
 assigned.split(",").forEach(name=>{
+
 name=name.trim();
 if(!name) return;
-stats.byStaff[name]=(stats.byStaff[name]||0)+1;
+
+stats.byStaff[name] =
+(stats.byStaff[name] || 0) + 1;
+
 });
 
 });

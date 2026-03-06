@@ -552,12 +552,14 @@ function loadDashboard(){
 apiCall("getDashboardStats")
 .then(data=>{
 
-document.getElementById("totalActivities").innerText=data.total;
-document.getElementById("conductedActivities").innerText=data.conducted;
-document.getElementById("assignedActivities").innerText=data.assigned;
-document.getElementById("unassignedActivities").innerText=data.unassigned;
-document.getElementById("deniedActivities").innerText=data.denied;
-document.getElementById("referredActivities").innerText=data.referred;
+console.log("Dashboard Data:", data);
+
+document.getElementById("totalActivities").innerText=data.total || 0;
+document.getElementById("conductedActivities").innerText=data.conducted || 0;
+document.getElementById("assignedActivities").innerText=data.assigned || 0;
+document.getElementById("unassignedActivities").innerText=data.unassigned || 0;
+document.getElementById("deniedActivities").innerText=data.denied || 0;
+document.getElementById("referredActivities").innerText=data.referred || 0;
 
 renderActivityTypes(data.byType);
 
@@ -608,7 +610,12 @@ div.style.display="none";
 
 function renderMunicipalityChart(){
 
-const data=window.municipalityData;
+const data = window.municipalityData;
+
+if(!data){
+document.getElementById("municipalityChart").innerHTML="No data";
+return;
+}
 
 let html="";
 
@@ -643,7 +650,12 @@ div.style.display="none";
 
 function renderStaffChart(){
 
-const data=window.staffData;
+const data = window.staffData;
+
+if(!data){
+document.getElementById("staffChart").innerHTML="No data";
+return;
+}
 
 let html="";
 
