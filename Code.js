@@ -806,10 +806,10 @@ data.forEach(r=>{
 
 stats.total++;
 
-const status=r[18];
-const assigned=r[17];
-const type=r[6];
-const municipality=r[4];
+const status = (r[18] || "").toString().trim();
+const assigned = (r[17] || "").toString().trim();
+const type = (r[6] || "").toString().trim().toLowerCase();
+const municipality = (r[4] || "").toString().trim().toLowerCase();
 
 if(status==="Conducted") stats.conducted++;
 if(status==="Denied") stats.denied++;
@@ -822,21 +822,34 @@ stats.unassigned++;
 }
 
 if(type){
-stats.byType[type]=(stats.byType[type]||0)+1;
+
+const key = type.toLowerCase().trim();
+
+stats.byType[key] = (stats.byType[key] || 0) + 1;
+
 }
 
 if(municipality){
-stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
+
+const key = municipality.toLowerCase().trim();
+
+stats.byMunicipality[key] = (stats.byMunicipality[key] || 0) + 1;
+
 }
 
-if(assigned){
-assigned.split(",").forEach(name=>{
-name=name.trim();
-if(!name) return;
-stats.byStaff[name]=(stats.byStaff[name]||0)+1;
-});
-}
+if (assigned) {
 
+  assigned.split(",").forEach(name => {
+
+    const key = name.toLowerCase().trim();
+
+    if (!key) return;
+
+    stats.byStaff[key] = (stats.byStaff[key] || 0) + 1;
+
+  });
+
+  }
 });
 
 return stats;
