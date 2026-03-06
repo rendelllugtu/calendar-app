@@ -803,50 +803,52 @@ const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
 const data = sh.getDataRange().getValues();
 data.shift();
 
-const stats = {
+let stats={
 total:0,
 conducted:0,
 assigned:0,
 unassigned:0,
 denied:0,
 referred:0,
+byType:{},
 byMunicipality:{},
-byStaff:{},
-byType:{}   // NEW
+byStaff:{}
 };
 
 data.forEach(r=>{
 
-if(!r[10]) return;
-
 stats.total++;
 
-const municipality = r[4];
-const staff = r[17] || "Unassigned";
-const status = String(r[18]||"").toLowerCase();
-const type = r[6];   // ACTIVITY TYPE COLUMN
+const status=r[18];
+const assigned=r[17];
+const type=r[6];
+const municipality=r[4];
 
-if(status==="conducted") stats.conducted++;
-if(status==="assigned") stats.assigned++;
-if(status==="denied") stats.denied++;
-if(status==="referred") stats.referred++;
+if(status==="Conducted") stats.conducted++;
+if(status==="Denied") stats.denied++;
+if(status==="Referred") stats.referred++;
 
-if(!r[17]) stats.unassigned++;
+if(assigned && assigned!=="Unassigned"){
+stats.assigned++;
+}else{
+stats.unassigned++;
+}
 
-// Municipality
-if(!stats.byMunicipality[municipality]) stats.byMunicipality[municipality]=0;
-stats.byMunicipality[municipality]++;
+if(type){
+stats.byType[type]=(stats.byType[type]||0)+1;
+}
 
-// Staff
-staff.split(",").forEach(s=>{
-s=s.trim();
-if(!stats.byStaff[s]) stats.byStaff[s]=0;
-stats.byStaff[s]++;
+if(municipality){
+stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
+}
+
+if(assigned){
+assigned.split(",").forEach(name=>{
+name=name.trim();
+if(!name) return;
+stats.byStaff[name]=(stats.byStaff[name]||0)+1;
 });
-
-// Activity Type
-if(!stats.byType[type]) stats.byType[type]=0;
-stats.byType[type]++;
+}
 
 });
 
