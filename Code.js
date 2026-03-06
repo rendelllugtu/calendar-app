@@ -30,44 +30,6 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(e) {
-  try {
-
-    const body = JSON.parse(e.parameter.data);
-    let result = {};
-
-    if (body.action === "getCalendarData") {
-      result = getCalendarData();
-    }
-
-    if (body.action === "getDashboardStats") {
-      result = getDashboardStats();
-    }
-
-    if (body.action === "updateAssignedPerson") {
-      result = updateAssignedPerson(body.rowId, body.people);
-    }
-
-    if (body.action === "updateActivityStatus") {
-      result = updateActivityStatus(body.rowId, body.status, body.photos, body.gps);
-    }
-
-    if (body.action === "getUnavailableStaffForDate") {
-      result = getUnavailableStaffForDate(body.rowId);
-    }
-
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
 /************************************************
  * LOCAL DEVELOPMENT TEST FUNCTION
  ************************************************/
