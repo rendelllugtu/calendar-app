@@ -249,7 +249,6 @@
   align-items:flex-start;
 }
 
-/* Dashboard panel */
 .dashboard{
   width:260px;
   background:white;
@@ -258,197 +257,236 @@
   box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* Calendar area */
 .calendar-container{
   flex:1;
 }
 
-/* Dashboard cards */
-.card{
-  background:#f8f9fc;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:6px;
-  display:flex;
-  justify-content:space-between;
-  font-size:14px;
-}
-
-/* Chart buttons */
-.dashboard button{
-  width:100%;
-  margin-top:10px;
-  padding:8px;
-  border:none;
-  background:#4e73df;
-  color:white;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.dashboard button:hover{
-  background:#2e59d9;
+#calendar{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
     </style>
   </head>
   <body>
+    
     <div class="header-bar">
 
   <!-- 🔹 Top Row - Logos -->
+
   <div class="logo-row">
 
-    <div class="left-group">
-      <div class="logo-box">
-        <img src="images/logos/logo1.png" alt="Logo 1">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo2.png" alt="Logo 2">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo3.png" alt="Logo 3">
-      </div>
-    </div>
+```
+<div class="left-group">
+  <div class="logo-box">
+    <img src="images/logos/logo1.png" alt="Logo 1">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo2.png" alt="Logo 2">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo3.png" alt="Logo 3">
+  </div>
+</div>
 
-    <div class="right-group">
-      <div class="logo-box">
-        <img src="images/logos/logo4.png" alt="Logo 4">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo5.png" alt="Logo 5">
-      </div>
-    </div>
+<div class="right-group">
+  <div class="logo-box">
+    <img src="images/logos/logo4.png" alt="Logo 4">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo5.png" alt="Logo 5">
+  </div>
+</div>
+```
 
   </div>
 
   <!-- 🔹 Title Below Logos -->
+
   <h1 class="page-title">📅 Request Calendar</h1>
 
 </div>
 
-    <div id="filter-container">
-      <label for="personFilter"><strong>Filter by Assigned Person:</strong></label>
-      <select id="personFilter">
-        <option value="all">All</option>
-      </select>
-      <button class="btn" id="compareBtn" onclick="toggleGoogleCalendar()">🔍 Compare to Google Calendar</button>
-    </div>
+<div id="filter-container">
+  <label for="personFilter"><strong>Filter by Assigned Person:</strong></label>
+  <select id="personFilter">
+    <option value="all">All</option>
+  </select>
 
-    <div id="calendar-container">
-      <div id="calendar"></div>
-      <iframe id="googleCalendar" style="display:none;border:none;border-radius:10px;flex:1;min-height:800px;" src="https://calendar.google.com/calendar/embed?src=primary"></iframe>
-    </div>
-
-    <!-- Assign Modal -->
-<div id="assignModal" class="modal">
-  <div class="modal-content">
-    <h3>Assign Person</h3>
-
-    <div id="assignInfo" style="margin-bottom:12px;"></div>
-
-    <label>Select Person(s):</label>
-    <div class="dropdown">
-      <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">Select Person(s)</button>
-      <div id="assignMenu" class="dropdown-content"></div>
-    </div>
-
-    <input type="hidden" id="assignHidden" />
-
-    <div style="margin-top:15px;text-align:right;">
-      <button class="btn" id="saveAssign">Save</button>
-      <button type="button" class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
-    </div>
-  </div>
+  <button class="btn" id="compareBtn" onclick="toggleGoogleCalendar()">
+    🔍 Compare to Google Calendar
+  </button>
 </div>
 
-    <!-- Update Activity Modal -->
-    <div id="updateModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">Update Activity</div>
-        <p id="updateInfo"></p>
-        <label for="activityStatus">Activity Status:</label>
-        <select id="activityStatus">
-          <option value="Conducted">Conducted</option>
-          <option value="Not Conducted">Not Conducted</option>
-          <option value="Rescheduled">Rescheduled</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        <p><strong>Upload Photos (1–3):</strong></p>
-        <input type="file" id="photoInput" accept="image/*" multiple />
-        <div class="photo-preview" id="photoPreview"></div>
-        <div style="margin-top:15px;text-align:right;">
-          <button class="btn" id="saveUpdate">Save Update</button>
-          <button type="button" class="btn" style="background:#888;" id="cancelUpdate">Cancel</button>
-        </div>
-      </div>
-    </div>
+<!-- ============================= -->
 
-    <div class="main-container">
+<!-- MAIN DASHBOARD + CALENDAR -->
+
+<!-- ============================= -->
+
+<div class="main-container">
 
   <!-- LEFT DASHBOARD -->
+
   <div class="dashboard">
 
-    <h3>📊 Activity Dashboard</h3>
+```
+<h3>📊 Activity Dashboard</h3>
 
-    <div class="card">
-      <b>Total Activities</b>
-      <span id="totalActivities"></span>
-    </div>
+<div class="card">
+  <b>Total Activities</b>
+  <span id="totalActivities"></span>
+</div>
 
-    <div class="card">
-      <b>Conducted</b>
-      <span id="conductedActivities"></span>
-    </div>
+<div class="card">
+  <b>Conducted</b>
+  <span id="conductedActivities"></span>
+</div>
 
-    <div class="card">
-      <b>Assigned</b>
-      <span id="assignedActivities"></span>
-    </div>
+<div class="card">
+  <b>Assigned</b>
+  <span id="assignedActivities"></span>
+</div>
 
-    <div class="card">
-      <b>Unassigned</b>
-      <span id="unassignedActivities"></span>
-    </div>
+<div class="card">
+  <b>Unassigned</b>
+  <span id="unassignedActivities"></span>
+</div>
 
-    <div class="card">
-      <b>Denied</b>
-      <span id="deniedActivities"></span>
-    </div>
+<div class="card">
+  <b>Denied</b>
+  <span id="deniedActivities"></span>
+</div>
 
-    <div class="card">
-      <b>Referred</b>
-      <span id="referredActivities"></span>
-    </div>
+<div class="card">
+  <b>Referred</b>
+  <span id="referredActivities"></span>
+</div>
 
-    <hr>
+<hr>
 
-    <!-- ACTIVITY TYPES -->
-    <h4>📋 Activity Types</h4>
+<!-- ACTIVITY TYPES -->
+<h4>📋 Activity Types</h4>
+<div id="activityTypes"></div>
 
-    <div id="activityTypes"></div>
+<hr>
 
-    <hr>
+<button onclick="toggleMunicipalityChart()">
+  Activities by Municipality
+</button>
 
-    <button onclick="toggleMunicipalityChart()">Activities by Municipality</button>
-    <div id="municipalityChart" style="display:none"></div>
+<div id="municipalityChart" style="display:none"></div>
 
-    <button onclick="toggleStaffChart()">Activities by Staff</button>
-    <div id="staffChart" style="display:none"></div>
+<button onclick="toggleStaffChart()">
+  Activities by Staff
+</button>
+
+<div id="staffChart" style="display:none"></div>
+```
 
   </div>
 
-  <!-- CALENDAR -->
+  <!-- CALENDAR AREA -->
+
   <div class="calendar-container">
-    <div id="calendar"></div>
+
+```
+<div id="calendar-container">
+  <div id="calendar"></div>
+
+  <iframe 
+    id="googleCalendar"
+    style="display:none;border:none;border-radius:10px;flex:1;min-height:800px;"
+    src="https://calendar.google.com/calendar/embed?src=primary">
+  </iframe>
+
+</div>
+```
+
   </div>
 
 </div>
 
-    <!-- Loading -->
-    <div id="loadingOverlay">
-      <div class="loader"></div>
-      <div>Loading...</div>
-    </div>
+<!-- Assign Modal -->
+
+<div id="assignModal" class="modal">
+  <div class="modal-content">
+
+```
+<h3>Assign Person</h3>
+
+<div id="assignInfo" style="margin-bottom:12px;"></div>
+
+<label>Select Person(s):</label>
+
+<div class="dropdown">
+  <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">
+    Select Person(s)
+  </button>
+
+  <div id="assignMenu" class="dropdown-content"></div>
+</div>
+
+<input type="hidden" id="assignHidden" />
+
+<div style="margin-top:15px;text-align:right;">
+  <button class="btn" id="saveAssign">Save</button>
+  <button type="button" class="btn" style="background:#888;" id="cancelAssign">
+    Cancel
+  </button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- Update Activity Modal -->
+
+<div id="updateModal" class="modal">
+
+  <div class="modal-content">
+
+```
+<div class="modal-header">Update Activity</div>
+
+<p id="updateInfo"></p>
+
+<label for="activityStatus">Activity Status:</label>
+
+<select id="activityStatus">
+  <option value="Conducted">Conducted</option>
+  <option value="Not Conducted">Not Conducted</option>
+  <option value="Rescheduled">Rescheduled</option>
+  <option value="Cancelled">Cancelled</option>
+</select>
+
+<p><strong>Upload Photos (1–3):</strong></p>
+
+<input type="file" id="photoInput" accept="image/*" multiple />
+
+<div class="photo-preview" id="photoPreview"></div>
+
+<div style="margin-top:15px;text-align:right;">
+  <button class="btn" id="saveUpdate">Save Update</button>
+  <button type="button" class="btn" style="background:#888;" id="cancelUpdate">
+    Cancel
+  </button>
+</div>
+```
+
+  </div>
+
+</div>
+
+<!-- Loading -->
+
+<div id="loadingOverlay">
+  <div class="loader"></div>
+  <div>Loading...</div>
+</div>
+
 
     <!-- ✅ ADD HEIC LIBRARY HERE -->
 <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>

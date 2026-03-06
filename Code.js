@@ -788,3 +788,60 @@ Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
 
 return [...unavailable];
 }
+
+function getDashboardStats(){
+
+const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+const data = sh.getDataRange().getValues();
+data.shift();
+
+const stats = {
+total:0,
+conducted:0,
+assigned:0,
+unassigned:0,
+denied:0,
+referred:0,
+byMunicipality:{},
+byStaff:{},
+byType:{}   // NEW
+};
+
+data.forEach(r=>{
+
+if(!r[10]) return;
+
+stats.total++;
+
+const municipality = r[4];
+const staff = r[17] || "Unassigned";
+const status = String(r[18]||"").toLowerCase();
+const type = r[6];   // ACTIVITY TYPE COLUMN
+
+if(status==="conducted") stats.conducted++;
+if(status==="assigned") stats.assigned++;
+if(status==="denied") stats.denied++;
+if(status==="referred") stats.referred++;
+
+if(!r[17]) stats.unassigned++;
+
+// Municipality
+if(!stats.byMunicipality[municipality]) stats.byMunicipality[municipality]=0;
+stats.byMunicipality[municipality]++;
+
+// Staff
+staff.split(",").forEach(s=>{
+s=s.trim();
+if(!stats.byStaff[s]) stats.byStaff[s]=0;
+stats.byStaff[s]++;
+});
+
+// Activity Type
+if(!stats.byType[type]) stats.byType[type]=0;
+stats.byType[type]++;
+
+});
+
+return stats;
+
+}
