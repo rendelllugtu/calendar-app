@@ -495,24 +495,22 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbwxj1-fULcNdA1ia3l1warDkY0lGGUCwdKD4oggkYXQmF83oiyEVv7azr1-IJCZTWrE/exec";
 
 async function apiCall(action, payload = {}) {
-
   try {
+    const formData = new URLSearchParams();
 
-    const params = new URLSearchParams({
-      data: JSON.stringify({
-        action,
-        ...payload
-      })
-    });
+    formData.append("data", JSON.stringify({
+      action,
+      ...payload
+    }));
 
-    const url = `${API_URL}?${params.toString()}`;
-
-    const response = await fetch(url, {
-      method: "GET"
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: formData
     });
 
     const text = await response.text();
 
+    // Prevent crash if backend returns plain text
     try {
       return JSON.parse(text);
     } catch {
@@ -523,7 +521,6 @@ async function apiCall(action, payload = {}) {
     console.error("API Error:", error);
     throw error;
   }
-
 }
 
       let allEvents = [];
@@ -554,8 +551,6 @@ function loadDashboard(){
 
 apiCall("getDashboardStats")
 .then(data=>{
-
-console.log("Dashboard Data:", data);
 
 document.getElementById("totalActivities").innerText=data.total || 0;
 document.getElementById("conductedActivities").innerText=data.conducted || 0;

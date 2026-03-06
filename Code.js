@@ -1,9 +1,7 @@
 function doGet(e) {
-
+  const action = e.parameter.action;
   const body = e.parameter.data ? JSON.parse(e.parameter.data) : {};
-  const action = body.action;
-
-  let result = {};
+  let result;
 
   if (action === "getCalendarData") {
     result = getCalendarData();
@@ -28,6 +26,42 @@ function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.parameter.data);
+    let result = {};
+
+    if (body.action === "getCalendarData") {
+      result = getCalendarData();
+    }
+
+    if (body.action === "getDashboardStats") {
+      result = getDashboardStats();
+    }
+
+    if (body.action === "updateAssignedPerson") {
+      result = updateAssignedPerson(body.rowId, body.people);
+    }
+
+    if (body.action === "updateActivityStatus") {
+      result = updateActivityStatus(body.rowId, body.status, body.photos, body.gps);
+    }
+
+    if (body.action === "getUnavailableStaffForDate") {
+      result = getUnavailableStaffForDate(body.rowId);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /************************************************
@@ -455,7 +489,7 @@ function verifyMunicipalityFromGPS_(row, gps) {
  * whenever a new form response is submitted
  *************************************************************/
 function sendEmailOnFormSubmit(e) {
-  const sheet = e.range.getSheet();
+  const sheet = e.source.getActiveSheet();
   if (sheet.getName() !== SHEET_NAME) return;
 
   const row = e.range.getRow();
@@ -675,92 +709,79 @@ function getStaffOnLeaveForDate(rowId) {
 
 function getUnavailableStaffForDate(rowId) {
 
-const row = Number(rowId);
-const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
-const data = sh.getDataRange().getValues();
-data.shift();
+  const row = Number(rowId);
+  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+  const data = sh.getDataRange().getValues();
+  data.shift();
 
-const activityStart = new Date(sh.getRange(row, 11).getValue());
-const activityEnd = sh.getRange(row, 13).getValue()
-? new Date(sh.getRange(row, 13).getValue())
-: new Date(activityStart);
+  const activityStart = new Date(sh.getRange(row, 11).getValue());
+  const activityEnd = sh.getRange(row, 13).getValue()
+    ? new Date(sh.getRange(row, 13).getValue())
+    : new Date(activityStart);
 
-activityStart.setHours(0,0,0,0);
-activityEnd.setHours(23,59,59,999);
+  activityStart.setHours(0,0,0,0);
+  activityEnd.setHours(23,59,59,999);
 
-const unavailable = new Set();
+  const unavailable = new Set();
 
-// 🔒 Statuses that should NOT block availability
-const skipStatuses = ["denied","referred","cancelled","rescheduled"];
+  // 🔥 CHECK OTHER ACTIVITIES
+  data.forEach((r, i) => {
 
-// 🔥 CHECK OTHER ACTIVITIES
-data.forEach((r, i) => {
+    const currentRow = i + 2;
+    if (currentRow === row) return;
 
-const currentRow = i + 2;
-if (currentRow === row) return;
+    const status = (r[18] || "").toLowerCase();
+    if (status === "denied" || status === "referred") return;
 
-const status = String(r[18] || "").toLowerCase().trim();
+    const assigned = String(r[17] || "").trim();
+    if (!assigned) return;
 
-// Skip activities that should not block staff
-if (skipStatuses.includes(status)) return;
+    const otherStart = new Date(r[10]);
+    const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
 
-const assigned = String(r[17] || "").trim();
-if (!assigned) return;
+    otherStart.setHours(0,0,0,0);
+    otherEnd.setHours(23,59,59,999);
 
-const otherStart = new Date(r[10]);
-const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
-
-otherStart.setHours(0,0,0,0);
-otherEnd.setHours(23,59,59,999);
-
-// 🔒 Prevent double booking when dates overlap
-if (
-  activityStart <= otherEnd &&
-  activityEnd >= otherStart
-) {
-  assigned.split(",").forEach(name => {
-
-    const cleaned = name.trim().toLowerCase();
-    if (cleaned) unavailable.add(cleaned);
+    if (
+      activityStart <= otherEnd &&
+      activityEnd >= otherStart
+    ) {
+      assigned.split(",").forEach(name => {
+        unavailable.add(name.trim().toLowerCase());
+      });
+    }
 
   });
-}
 
+  // 🔥 CHECK LEAVE
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+  if (leaveSheet) {
 
-});
+    const leaveData = leaveSheet.getDataRange().getValues();
+    leaveData.shift();
 
-// 🔥 CHECK LEAVE
-const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
-if (leaveSheet) {
+    leaveData.forEach(r => {
 
+      const leaveName = String(r[0]).trim().toLowerCase();
+      const leaveStart = new Date(r[1]);
+      const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
 
-const leaveData = leaveSheet.getDataRange().getValues();
-leaveData.shift();
+      leaveStart.setHours(0,0,0,0);
+      leaveEnd.setHours(23,59,59,999);
 
-leaveData.forEach(r => {
+      if (
+        activityStart <= leaveEnd &&
+        activityEnd >= leaveStart
+      ) {
+        unavailable.add(leaveName);
+      }
 
-  const leaveName = String(r[0]).trim().toLowerCase();
-  const leaveStart = new Date(r[1]);
-  const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
-
-  leaveStart.setHours(0,0,0,0);
-  leaveEnd.setHours(23,59,59,999);
-
-  if (
-    activityStart <= leaveEnd &&
-    activityEnd >= leaveStart
-  ) {
-    unavailable.add(leaveName);
+    });
   }
 
-});
+  Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
 
-
-}
-
-Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
-
-return [...unavailable];
+  return [...unavailable];
 }
 
 function getDashboardStats(){
@@ -785,35 +806,36 @@ data.forEach(r=>{
 
 stats.total++;
 
-const status = (r[18] || "").toString();
-const assigned = (r[17] || "").toString();
-const type = (r[6] || "Unknown").toString();
-const municipality = (r[4] || "Unknown").toString();
+const status=r[18];
+const assigned=r[17];
+const type=r[6];
+const municipality=r[4];
 
-if(status === "Conducted") stats.conducted++;
-if(status === "Denied") stats.denied++;
-if(status === "Referred") stats.referred++;
+if(status==="Conducted") stats.conducted++;
+if(status==="Denied") stats.denied++;
+if(status==="Referred") stats.referred++;
 
-if(assigned && assigned !== "Unassigned"){
+if(assigned && assigned!=="Unassigned"){
 stats.assigned++;
 }else{
 stats.unassigned++;
 }
 
-stats.byType[type] = (stats.byType[type] || 0) + 1;
+if(type){
+stats.byType[type]=(stats.byType[type]||0)+1;
+}
 
-stats.byMunicipality[municipality] =
-(stats.byMunicipality[municipality] || 0) + 1;
+if(municipality){
+stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
+}
 
+if(assigned){
 assigned.split(",").forEach(name=>{
-
 name=name.trim();
 if(!name) return;
-
-stats.byStaff[name] =
-(stats.byStaff[name] || 0) + 1;
-
+stats.byStaff[name]=(stats.byStaff[name]||0)+1;
 });
+}
 
 });
 
