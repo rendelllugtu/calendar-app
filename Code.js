@@ -7,6 +7,10 @@ function doGet(e) {
     result = getCalendarData();
   }
 
+  if (body.action === "getDashboardStats") {
+    result = getDashboardStats();
+  }
+
   if (action === "updateAssignedPerson") {
     result = updateAssignedPerson(body.rowId, body.people);
   }
@@ -31,6 +35,10 @@ function doPost(e) {
 
     if (body.action === "getCalendarData") {
       result = getCalendarData();
+    }
+
+    if (body.action === "getDashboardStats") {
+      result = getDashboardStats();
     }
 
     if (body.action === "updateAssignedPerson") {
