@@ -552,8 +552,6 @@ function loadDashboard(){
 apiCall("getDashboardStats")
 .then(data=>{
 
-console.log("Dashboard Data:", data);
-
 document.getElementById("totalActivities").innerText=data.total;
 document.getElementById("conductedActivities").innerText=data.conducted;
 document.getElementById("assignedActivities").innerText=data.assigned;
@@ -572,6 +570,11 @@ window.staffData=data.byStaff;
 
 
 function renderActivityTypes(types){
+
+if(!types){
+document.getElementById("activityTypes").innerHTML="No data";
+return;
+}
 
 let html="";
 
