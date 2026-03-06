@@ -546,6 +546,11 @@ document.body.appendChild(tooltip);
 // ==============================
 // DASHBOARD FUNCTIONS
 // ==============================
+function toTitleCase(str){
+return str.replace(/\w\S*/g, function(txt){
+return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+});
+}
 
 function loadDashboard(){
 
@@ -582,7 +587,7 @@ Object.entries(types).forEach(([type,count])=>{
 
 html+=`
 <div class="card">
-<b>${type}</b>
+<b>${toTitleCase(type)}</b>
 <span>${count}</span>
 </div>
 `;
@@ -621,7 +626,7 @@ Object.entries(data).forEach(([name,val])=>{
 
 html+=`
 <div style="margin:4px 0">
-${name}
+${toTitleCase(name)}
 <div style="background:#3788d8;height:8px;width:${val*10}px"></div>
 ${val}
 </div>
@@ -661,7 +666,7 @@ Object.entries(data).forEach(([name,val])=>{
 
 html+=`
 <div style="margin:4px 0">
-${name}
+${toTitleCase(name)}
 <div style="background:#28a745;height:8px;width:${val*10}px"></div>
 ${val}
 </div>
