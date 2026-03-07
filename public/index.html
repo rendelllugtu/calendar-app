@@ -777,7 +777,7 @@ current.setDate(current.getDate()+1);
 
 function buildWeek(days,startIndex){
 
-let html="";
+let html = `<div class="heat-week">`;
 
 /* HEADER */
 
@@ -819,6 +819,8 @@ html+=`<div class="heat-cell ${cls}" title="${val} activities"></div>`;
 html+=`</div>`;
 
 });
+
+html += `</div>`;
 
 return html;
 
