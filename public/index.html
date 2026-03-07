@@ -272,13 +272,12 @@
 margin-bottom:12px;
 }
 
-.heat-header,
-.heat-days{
+.heat-header{
 display:grid;
-grid-template-columns: 110px repeat(5,24px);
+grid-template-columns:110px repeat(5,24px);
 gap:4px;
 font-size:11px;
-margin-left:110px;
+font-weight:bold;
 }
 
 .heat-row{
@@ -290,11 +289,6 @@ margin-top:4px;
 }
 
 .staff-name{
-font-size:11px;
-}
-
-.heat-header{
-font-weight:bold;
 font-size:11px;
 }
 
@@ -770,6 +764,8 @@ function buildWeek(days,startIndex){
 
 let html="";
 
+/* HEADER */
+
 html+=`<div class="heatmap-grid heat-header">`;
 
 html+=`<div></div>`;
@@ -781,7 +777,7 @@ html+=`<div>${d.toLocaleDateString("en",{weekday:"short"})}<br>${d.getDate()}</d
 html+=`</div>`;
 
 
-/* staff rows */
+/* STAFF ROWS */
 
 Object.entries(heat).forEach(([staff,data])=>{
 
@@ -791,7 +787,7 @@ html+=`<div class="staff-name">${toTitleCase(staff)}</div>`;
 
 for(let i=0;i<5;i++){
 
-const val=data[startIndex+i];
+const val=data[startIndex+i] || 0;
 
 let cls="";
 
@@ -799,7 +795,7 @@ if(val>=3) cls="high";
 else if(val>=2) cls="mid";
 else if(val>=1) cls="low";
 
-html+=`<div class="heat-cell ${cls}"></div>`;
+html+=`<div class="heat-cell ${cls}" title="${val} activities"></div>`;
 
 }
 
