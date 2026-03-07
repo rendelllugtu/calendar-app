@@ -302,7 +302,7 @@ height:16px;
 border-radius:3px;
 }
 
-.low{background:#28a745;}
+.low{background:#02ff3d;}
 .mid{background:#ffc107;}
 .high{background:#dc3545;}
 
@@ -741,7 +741,9 @@ const heat = {};
 
 allEvents.forEach(ev=>{
 
-const date = new Date(ev.start);
+const start = new Date(ev.start);
+const end = ev.end ? new Date(ev.end) : new Date(ev.start);
+
 const assigned = ev.extendedProps.assigned || "";
 
 assigned.split(",").forEach(name=>{
@@ -751,18 +753,27 @@ if(!staff) return;
 
 if(!heat[staff]) heat[staff] = Array(10).fill(0);
 
+/* loop through each day of the activity */
+
+let current = new Date(start);
+
+while(current <= end){
+
 days.forEach((day,i)=>{
 
-if(date.toDateString() === day.toDateString()){
+if(current.toDateString() === day.toDateString()){
 heat[staff][i]++;
 }
 
 });
 
-});
+current.setDate(current.getDate()+1);
+
+}
 
 });
 
+});
 
 function buildWeek(days,startIndex){
 
