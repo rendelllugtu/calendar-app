@@ -684,6 +684,20 @@ document.getElementById("municipalityChart").innerHTML=html;
 
 }
 
+function toggleStaffChart(){
+
+const div=document.getElementById("staffChart");
+
+if(div.style.display==="none"){
+div.style.display="block";
+renderStaffChart();
+}else{
+div.style.display="none";
+}
+
+}
+
+
 function renderStaffChart(){
 
 const data = window.staffData;
