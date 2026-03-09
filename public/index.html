@@ -756,7 +756,10 @@ const heat = {};
 allEvents.forEach(ev=>{
 
 const start = new Date(ev.start);
-const end = ev.end ? new Date(ev.end) : new Date(ev.start);
+
+const end = ev.end
+  ? new Date(new Date(ev.end).setDate(new Date(ev.end).getDate() - 1))
+  : new Date(ev.start);
 
 const assigned = ev.extendedProps.assigned || "";
 
@@ -766,8 +769,6 @@ const staff = name.trim().toLowerCase();
 if(!staff) return;
 
 if(!heat[staff]) heat[staff] = Array(10).fill(0);
-
-/* loop through each day of the activity */
 
 let current = new Date(start);
 
