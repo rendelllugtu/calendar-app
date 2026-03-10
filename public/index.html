@@ -1015,6 +1015,11 @@ peopleList.forEach(p => {
     },
 
     eventClick: function(info) {
+
+      if (info.event.extendedProps.regional) {
+    return;
+  }
+
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
