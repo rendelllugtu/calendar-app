@@ -263,8 +263,8 @@ if (regionalSheet) {
 
       allDay: true,
 
-      backgroundColor: "#6c757d",
-      borderColor: "#6c757d",
+      backgroundColor: "#474747",
+      borderColor: "#474747",
 
       extendedProps: {
         regional: true,
