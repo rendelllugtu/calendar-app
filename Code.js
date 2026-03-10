@@ -231,6 +231,55 @@ function getCalendarData() {
     });
   });
 
+// ===============================
+// LOAD REGIONAL ACTIVITIES
+// ===============================
+
+const regionalSheet = SpreadsheetApp.getActive().getSheetByName("Regional Activities");
+
+if (regionalSheet) {
+
+  const regionalData = regionalSheet.getDataRange().getValues();
+  regionalData.shift(); // remove header
+
+  regionalData.forEach((r, i) => {
+
+    if (!r[1]) return; // no start date
+
+    const start = new Date(r[1]);
+    const end = r[2] ? new Date(r[2]) : new Date(r[1]);
+    end.setDate(end.getDate() + 1);
+
+    const assigned = r[4] || "";
+
+    events.push({
+
+      id: "regional_" + i,
+
+      title: `📍 ${r[0]} ${assigned ? "— " + assigned : ""}`,
+
+      start: Utilities.formatDate(start, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      end: Utilities.formatDate(end, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+
+      allDay: true,
+
+      backgroundColor: "#6c757d",
+      borderColor: "#6c757d",
+
+      extendedProps: {
+        regional: true,
+        activityTitle: r[0],
+        description: r[3] || "",
+        assigned: assigned,
+        type: "Regional Activity"
+      }
+
+    });
+
+  });
+
+}
+
   return { events, people: [...people].sort() };
 }
 
