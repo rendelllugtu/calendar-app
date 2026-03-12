@@ -1015,11 +1015,10 @@ peopleList.forEach(p => {
     },
 
     eventClick: function(info) {
-
+      
       if (info.event.extendedProps.regional) {
     return;
   }
-
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
@@ -1197,7 +1196,19 @@ personFilter.addEventListener("change", function () {
 
   document.getElementById("assignModal").style.display = "block";
 
-   document.getElementById("assignInfo").innerText =
+  // 🔥 RESET PREVIOUS SELECTIONS
+  document.getElementById("assignHidden").value = "";
+  document.getElementById("assignDropdown").textContent = "Select Person(s)";
+
+  const checkboxes = document.querySelectorAll("#assignMenu input");
+
+  checkboxes.forEach(cb => {
+    cb.checked = false;       // clear previous selections
+    cb.disabled = false;      // reset disabled state
+    cb.parentElement.style.opacity = 1;
+  });
+
+  document.getElementById("assignInfo").innerText =
   `${details.activityTitle}\nAssigned: ${details.assigned || "Unassigned"}\nEnd User: ${details.endUser}`;
 
   apiCall("getUnavailableStaffForDate", {
@@ -1207,7 +1218,6 @@ personFilter.addEventListener("change", function () {
 
     console.log("Unavailable:", unavailableStaff);
 
-    // Safety check in case backend returns null/undefined
     if (!Array.isArray(unavailableStaff)) {
       console.warn("Unexpected response:", unavailableStaff);
       unavailableStaff = [];
@@ -1222,9 +1232,6 @@ personFilter.addEventListener("change", function () {
       if (unavailableStaff.includes(name)) {
         cb.disabled = true;
         cb.parentElement.style.opacity = 0.4;
-      } else {
-        cb.disabled = false;
-        cb.parentElement.style.opacity = 1;
       }
 
     });
