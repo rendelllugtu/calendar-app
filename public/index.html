@@ -239,104 +239,296 @@
   max-width: 280px;
 }
 
+/* =========================
+   DASHBOARD + CALENDAR LAYOUT
+========================= */
+
+.main-container{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.dashboard{
+  width:260px;
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.calendar-container{
+  flex:1;
+}
+
+#calendar{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.heat-week{
+margin-bottom:12px;
+}
+
+.heat-header{
+display:grid;
+grid-template-columns:110px repeat(5,24px);
+gap:4px;
+font-size:11px;
+font-weight:bold;
+}
+
+.heat-header div{
+text-align:center;
+}
+
+.heat-row{
+display:grid;
+grid-template-columns:110px repeat(5,24px);
+align-items:center;
+gap:4px;
+margin-top:4px;
+}
+
+.staff-name{
+font-size:11px;
+}
+
+.heat-cell{
+width:22px;
+height:16px;
+border-radius:3px;
+}
+
+.low{background:#02ff3d;}
+.mid{background:#ffc107;}
+.high{background:#dc3545;}
+
     </style>
   </head>
   <body>
+
     <div class="header-bar">
 
   <!-- 🔹 Top Row - Logos -->
+
   <div class="logo-row">
 
-    <div class="left-group">
-      <div class="logo-box">
-        <img src="images/logos/logo1.png" alt="Logo 1">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo2.png" alt="Logo 2">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo3.png" alt="Logo 3">
-      </div>
-    </div>
 
-    <div class="right-group">
-      <div class="logo-box">
-        <img src="images/logos/logo4.png" alt="Logo 4">
-      </div>
-      <div class="logo-box">
-        <img src="images/logos/logo5.png" alt="Logo 5">
-      </div>
-    </div>
+<div class="left-group">
+  <div class="logo-box">
+    <img src="images/logos/logo1.png" alt="Logo 1">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo2.png" alt="Logo 2">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo3.png" alt="Logo 3">
+  </div>
+</div>
+
+<div class="right-group">
+  <div class="logo-box">
+    <img src="images/logos/logo4.png" alt="Logo 4">
+  </div>
+  <div class="logo-box">
+    <img src="images/logos/logo5.png" alt="Logo 5">
+  </div>
+</div>
+
 
   </div>
 
   <!-- 🔹 Title Below Logos -->
+
   <h1 class="page-title">📅 Request Calendar</h1>
 
 </div>
 
-    <div id="filter-container">
-      <label for="personFilter"><strong>Filter by Assigned Person:</strong></label>
-      <select id="personFilter">
-        <option value="all">All</option>
-      </select>
-      <button class="btn" id="compareBtn" onclick="toggleGoogleCalendar()">🔍 Compare to Google Calendar</button>
-    </div>
+<div id="filter-container">
+  <label for="personFilter"><strong>Filter by Assigned Person:</strong></label>
+  <select id="personFilter">
+    <option value="all">All</option>
+  </select>
 
-    <div id="calendar-container">
-      <div id="calendar"></div>
-      <iframe id="googleCalendar" style="display:none;border:none;border-radius:10px;flex:1;min-height:800px;" src="https://calendar.google.com/calendar/embed?src=primary"></iframe>
-    </div>
+  <button class="btn" id="compareBtn" onclick="toggleGoogleCalendar()">
+    🔍 Compare to Google Calendar
+  </button>
+</div>
 
-    <!-- Assign Modal -->
+<!-- ============================= -->
+
+<!-- MAIN DASHBOARD + CALENDAR -->
+
+<!-- ============================= -->
+
+<div class="main-container">
+
+  <!-- LEFT DASHBOARD -->
+
+  <div class="dashboard">
+
+
+<h3>📊 Activity Dashboard</h3>
+
+<div class="card">
+  <b>Total Activities</b>
+  <span id="totalActivities"></span>
+</div>
+
+<div class="card">
+  <b>Conducted</b>
+  <span id="conductedActivities"></span>
+</div>
+
+<div class="card">
+  <b>Assigned</b>
+  <span id="assignedActivities"></span>
+</div>
+
+<div class="card">
+  <b>Unassigned</b>
+  <span id="unassignedActivities"></span>
+</div>
+
+<div class="card">
+  <b>Denied</b>
+  <span id="deniedActivities"></span>
+</div>
+
+<div class="card">
+  <b>Referred</b>
+  <span id="referredActivities"></span>
+</div>
+
+<hr>
+
+<!-- ACTIVITY TYPES -->
+<h4>📋 Activity Types</h4>
+<div id="activityTypes"></div>
+
+<hr>
+
+<button onclick="toggleMunicipalityChart()">
+  Activities by Municipality
+</button>
+
+<div id="municipalityChart" style="display:none"></div>
+
+<button onclick="toggleStaffChart()">
+  Activities by Staff
+</button>
+
+<div id="staffChart" style="display:none"></div>
+
+
+  </div>
+
+  <!-- CALENDAR AREA -->
+
+  <div class="calendar-container">
+
+
+<div id="calendar-container">
+  <div id="calendar"></div>
+  <div class="heatmap-panel">
+  <h3>📊 Staff Load (Next 10 Days)</h3>
+  <div id="rollingHeatmap"></div>
+</div>
+
+  <iframe 
+    id="googleCalendar"
+    style="display:none;border:none;border-radius:10px;flex:1;min-height:800px;"
+    src="https://calendar.google.com/calendar/embed?src=primary">
+  </iframe>
+
+</div>
+
+
+  </div>
+
+</div>
+
+<!-- Assign Modal -->
+
 <div id="assignModal" class="modal">
   <div class="modal-content">
-    <h3>Assign Person</h3>
 
-    <div id="assignInfo" style="margin-bottom:12px;"></div>
 
-    <label>Select Person(s):</label>
-    <div class="dropdown">
-      <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">Select Person(s)</button>
-      <div id="assignMenu" class="dropdown-content"></div>
-    </div>
+<h3>Assign Person</h3>
 
-    <input type="hidden" id="assignHidden" />
+<div id="assignInfo" style="margin-bottom:12px;"></div>
 
-    <div style="margin-top:15px;text-align:right;">
-      <button class="btn" id="saveAssign">Save</button>
-      <button type="button" class="btn" style="background:#888;" id="cancelAssign">Cancel</button>
-    </div>
+<label>Select Person(s):</label>
+
+<div class="dropdown">
+  <button id="assignDropdown" class="btn" type="button" onclick="toggleDropdown()">
+    Select Person(s)
+  </button>
+
+  <div id="assignMenu" class="dropdown-content"></div>
+</div>
+
+<input type="hidden" id="assignHidden" />
+
+<div style="margin-top:15px;text-align:right;">
+  <button class="btn" id="saveAssign">Save</button>
+  <button type="button" class="btn" style="background:#888;" id="cancelAssign">
+    Cancel
+  </button>
+</div>
+
+
   </div>
 </div>
 
-    <!-- Update Activity Modal -->
-    <div id="updateModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">Update Activity</div>
-        <p id="updateInfo"></p>
-        <label for="activityStatus">Activity Status:</label>
-        <select id="activityStatus">
-          <option value="Conducted">Conducted</option>
-          <option value="Not Conducted">Not Conducted</option>
-          <option value="Rescheduled">Rescheduled</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        <p><strong>Upload Photos (1–3):</strong></p>
-        <input type="file" id="photoInput" accept="image/*" multiple />
-        <div class="photo-preview" id="photoPreview"></div>
-        <div style="margin-top:15px;text-align:right;">
-          <button class="btn" id="saveUpdate">Save Update</button>
-          <button type="button" class="btn" style="background:#888;" id="cancelUpdate">Cancel</button>
-        </div>
-      </div>
-    </div>
+<!-- Update Activity Modal -->
 
-    <!-- Loading -->
-    <div id="loadingOverlay">
-      <div class="loader"></div>
-      <div>Loading...</div>
-    </div>
+<div id="updateModal" class="modal">
+
+  <div class="modal-content">
+
+
+<div class="modal-header">Update Activity</div>
+
+<p id="updateInfo"></p>
+
+<label for="activityStatus">Activity Status:</label>
+
+<select id="activityStatus">
+  <option value="Conducted">Conducted</option>
+  <option value="Not Conducted">Not Conducted</option>
+  <option value="Rescheduled">Rescheduled</option>
+  <option value="Cancelled">Cancelled</option>
+</select>
+
+<p><strong>Upload Photos (1–3):</strong></p>
+
+<input type="file" id="photoInput" accept="image/*" multiple />
+
+<div class="photo-preview" id="photoPreview"></div>
+
+<div style="margin-top:15px;text-align:right;">
+  <button class="btn" id="saveUpdate">Save Update</button>
+  <button type="button" class="btn" style="background:#888;" id="cancelUpdate">
+    Cancel
+  </button>
+</div>
+
+
+  </div>
+
+</div>
+
+<!-- Loading -->
+
+<div id="loadingOverlay">
+  <div class="loader"></div>
+  <div>Loading...</div>
+</div>
+
 
     <!-- ✅ ADD HEIC LIBRARY HERE -->
 <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
@@ -392,6 +584,272 @@ async function apiCall(action, payload = {}) {
 let tooltip = document.createElement("div");
 tooltip.className = "custom-tooltip";
 document.body.appendChild(tooltip);
+
+// ==============================
+// DASHBOARD FUNCTIONS
+// ==============================
+function toTitleCase(str){
+return str.replace(/\w\S*/g, function(txt){
+return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+});
+}
+
+function loadDashboard(){
+
+apiCall("getDashboardStats")
+.then(data=>{
+
+document.getElementById("totalActivities").innerText=data.total || 0;
+document.getElementById("conductedActivities").innerText=data.conducted || 0;
+document.getElementById("assignedActivities").innerText=data.assigned || 0;
+document.getElementById("unassignedActivities").innerText=data.unassigned || 0;
+document.getElementById("deniedActivities").innerText=data.denied || 0;
+document.getElementById("referredActivities").innerText=data.referred || 0;
+
+renderActivityTypes(data.byType);
+
+window.municipalityData=data.byMunicipality;
+window.staffData=data.byStaff;
+
+});
+
+}
+
+
+function renderActivityTypes(types){
+
+if(!types){
+document.getElementById("activityTypes").innerHTML="No data";
+return;
+}
+
+let html="";
+
+Object.entries(types).forEach(([type,count])=>{
+
+html+=`
+<div class="card">
+<b>${toTitleCase(type)}</b>
+<span>${count}</span>
+</div>
+`;
+
+});
+
+document.getElementById("activityTypes").innerHTML=html;
+
+}
+
+function toggleMunicipalityChart(){
+
+const div=document.getElementById("municipalityChart");
+
+if(div.style.display==="none"){
+div.style.display="block";
+renderMunicipalityChart();
+}else{
+div.style.display="none";
+}
+
+}
+
+function renderMunicipalityChart(){
+
+const data = window.municipalityData;
+
+if(!data){
+document.getElementById("municipalityChart").innerHTML="No data";
+return;
+}
+
+let html="";
+
+/* SORT BY VALUE DESCENDING */
+const sorted = Object.entries(data)
+.sort((a,b)=>b[1]-a[1]);
+
+sorted.forEach(([name,val])=>{
+
+html+=`
+<div style="margin:6px 0">
+<strong>${toTitleCase(name)}</strong>
+<div style="background:#3788d8;height:8px;width:${val*12}px"></div>
+${val}
+</div>
+`;
+
+});
+
+document.getElementById("municipalityChart").innerHTML=html;
+
+}
+
+function toggleStaffChart(){
+
+const div=document.getElementById("staffChart");
+
+if(div.style.display==="none"){
+div.style.display="block";
+renderStaffChart();
+}else{
+div.style.display="none";
+}
+
+}
+
+
+function renderStaffChart(){
+
+const data = window.staffData;
+
+if(!data){
+document.getElementById("staffChart").innerHTML="No data";
+return;
+}
+
+let html="";
+
+/* SORT BY VALUE DESCENDING */
+const sorted = Object.entries(data)
+.sort((a,b)=>b[1]-a[1]);
+
+sorted.forEach(([name,val])=>{
+
+html+=`
+<div style="margin:6px 0">
+<strong>${toTitleCase(name)}</strong>
+<div style="background:#28a745;height:8px;width:${val*12}px"></div>
+${val}
+</div>
+`;
+
+});
+
+document.getElementById("staffChart").innerHTML=html;
+
+}
+
+function renderRollingHeatmap(){
+
+const today = new Date();
+const days = [];
+
+/* Get next 10 weekdays */
+
+let d = new Date(today);
+
+while(days.length < 10){
+
+if(d.getDay() !== 0 && d.getDay() !== 6){
+days.push(new Date(d));
+}
+
+d.setDate(d.getDate()+1);
+
+}
+
+const week1 = days.slice(0,5);
+const week2 = days.slice(5,10);
+
+const heat = {};
+
+allEvents.forEach(ev=>{
+
+const start = new Date(ev.start);
+
+const end = ev.end
+  ? new Date(new Date(ev.end).setDate(new Date(ev.end).getDate() - 1))
+  : new Date(ev.start);
+
+const assigned = ev.extendedProps.assigned || "";
+
+assigned.split(",").forEach(name=>{
+
+const staff = name.trim().toLowerCase();
+if(!staff) return;
+
+if(!heat[staff]) heat[staff] = Array(10).fill(0);
+
+let current = new Date(start);
+
+while(current <= end){
+
+days.forEach((day,i)=>{
+
+if(current.toDateString() === day.toDateString()){
+heat[staff][i]++;
+}
+
+});
+
+current.setDate(current.getDate()+1);
+
+}
+
+});
+
+});
+
+function buildWeek(days,startIndex){
+
+let html = `<div class="heat-week">`;
+
+/* HEADER */
+
+html+=`<div class="heat-header">`;
+
+html+=`<div></div>`;
+
+days.forEach(d=>{
+html+=`<div style="text-align:center">
+${d.toLocaleDateString("en",{weekday:"short"})}<br>${d.getDate()}
+</div>`;
+});
+
+html+=`</div>`;
+
+
+/* STAFF ROWS */
+
+Object.entries(heat).forEach(([staff,data])=>{
+
+html+=`<div class="heat-row">`;
+
+html+=`<div class="staff-name">${toTitleCase(staff)}</div>`;
+
+for(let i=0;i<5;i++){
+
+const val=data[startIndex+i] || 0;
+
+let cls="";
+
+if(val>=3) cls="high";
+else if(val>=2) cls="mid";
+else if(val>=1) cls="low";
+
+html+=`<div class="heat-cell ${cls}" title="${val} activities"></div>`;
+
+}
+
+html+=`</div>`;
+
+});
+
+html += `</div>`;
+
+return html;
+
+}
+
+
+let html="";
+
+html+=buildWeek(week1,0);
+html+=buildWeek(week2,5);
+
+document.getElementById("rollingHeatmap").innerHTML = html;
+
+}
 
       document.addEventListener("DOMContentLoaded", function () {
 
@@ -514,6 +972,7 @@ peopleList.forEach(p => {
     allEvents = coloredEvents;
 
     successCallback(coloredEvents);
+    renderRollingHeatmap();
 
   })
   .catch(err => {
@@ -556,6 +1015,10 @@ peopleList.forEach(p => {
     },
 
     eventClick: function(info) {
+      
+      if (info.event.extendedProps.regional) {
+    return;
+  }
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
@@ -569,6 +1032,12 @@ peopleList.forEach(p => {
   });
 
   calendar.render();
+
+  // Load dashboard stats
+  loadDashboard();
+
+  // Initial heatmap render
+  renderStaffHeatmap();
   
           // Filter handler
 personFilter.addEventListener("change", function () {
@@ -607,6 +1076,7 @@ personFilter.addEventListener("change", function () {
   .then(function () {
     document.getElementById("assignModal").style.display = "none";
     calendar.refetchEvents();
+    setTimeout(renderRollingHeatmap, 300);
     showLoading(false);
   })
   .catch(function (err) {
@@ -694,6 +1164,7 @@ personFilter.addEventListener("change", function () {
       alert(msg);
       document.getElementById("updateModal").style.display = "none";
       calendar.refetchEvents(); // better than reload()
+      setTimeout(renderRollingHeatmap, 300);
     })
     .catch((err) => {
       showLoading(false);
@@ -725,7 +1196,19 @@ personFilter.addEventListener("change", function () {
 
   document.getElementById("assignModal").style.display = "block";
 
-   document.getElementById("assignInfo").innerText =
+  // 🔥 RESET PREVIOUS SELECTIONS
+  document.getElementById("assignHidden").value = "";
+  document.getElementById("assignDropdown").textContent = "Select Person(s)";
+
+  const checkboxes = document.querySelectorAll("#assignMenu input");
+
+  checkboxes.forEach(cb => {
+    cb.checked = false;       // clear previous selections
+    cb.disabled = false;      // reset disabled state
+    cb.parentElement.style.opacity = 1;
+  });
+
+  document.getElementById("assignInfo").innerText =
   `${details.activityTitle}\nAssigned: ${details.assigned || "Unassigned"}\nEnd User: ${details.endUser}`;
 
   apiCall("getUnavailableStaffForDate", {
@@ -735,7 +1218,6 @@ personFilter.addEventListener("change", function () {
 
     console.log("Unavailable:", unavailableStaff);
 
-    // Safety check in case backend returns null/undefined
     if (!Array.isArray(unavailableStaff)) {
       console.warn("Unexpected response:", unavailableStaff);
       unavailableStaff = [];
@@ -750,9 +1232,6 @@ personFilter.addEventListener("change", function () {
       if (unavailableStaff.includes(name)) {
         cb.disabled = true;
         cb.parentElement.style.opacity = 0.4;
-      } else {
-        cb.disabled = false;
-        cb.parentElement.style.opacity = 1;
       }
 
     });

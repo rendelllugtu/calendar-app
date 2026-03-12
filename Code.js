@@ -7,6 +7,10 @@ function doGet(e) {
     result = getCalendarData();
   }
 
+  if (action === "getDashboardStats") {
+    result = getDashboardStats();
+  }
+
   if (action === "updateAssignedPerson") {
     result = updateAssignedPerson(body.rowId, body.people);
   }
@@ -31,6 +35,10 @@ function doPost(e) {
 
     if (body.action === "getCalendarData") {
       result = getCalendarData();
+    }
+
+    if (body.action === "getDashboardStats") {
+      result = getDashboardStats();
     }
 
     if (body.action === "updateAssignedPerson") {
@@ -222,6 +230,55 @@ function getCalendarData() {
       }
     });
   });
+
+// ===============================
+// LOAD REGIONAL ACTIVITIES
+// ===============================
+
+const regionalSheet = SpreadsheetApp.getActive().getSheetByName("Regional Activities");
+
+if (regionalSheet) {
+
+  const regionalData = regionalSheet.getDataRange().getValues();
+  regionalData.shift(); // remove header
+
+  regionalData.forEach((r, i) => {
+
+    if (!r[1]) return; // no start date
+
+    const start = new Date(r[1]);
+    const end = r[2] ? new Date(r[2]) : new Date(r[1]);
+    end.setDate(end.getDate() + 1);
+
+    const assigned = r[4] || "";
+
+    events.push({
+
+      id: "regional_" + i,
+
+      title: `📍 ${r[0]} ${assigned ? "— " + assigned : ""}`,
+
+      start: Utilities.formatDate(start, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      end: Utilities.formatDate(end, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+
+      allDay: true,
+
+      backgroundColor: "#474747",
+      borderColor: "#474747",
+
+      extendedProps: {
+        regional: true,
+        activityTitle: r[0],
+        description: r[3] || "",
+        assigned: assigned,
+        type: "Regional Activity"
+      }
+
+    });
+
+  });
+
+}
 
   return { events, people: [...people].sort() };
 }
@@ -481,7 +538,7 @@ function verifyMunicipalityFromGPS_(row, gps) {
  * whenever a new form response is submitted
  *************************************************************/
 function sendEmailOnFormSubmit(e) {
-  const sheet = e.range.getSheet();
+  const sheet = e.source.getActiveSheet();
   if (sheet.getName() !== SHEET_NAME) return;
 
   const row = e.range.getRow();
@@ -701,90 +758,179 @@ function getStaffOnLeaveForDate(rowId) {
 
 function getUnavailableStaffForDate(rowId) {
 
-const row = Number(rowId);
+  const row = Number(rowId);
+  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+  const data = sh.getDataRange().getValues();
+  data.shift();
+
+  const activityStart = new Date(sh.getRange(row, 11).getValue());
+  const activityEnd = sh.getRange(row, 13).getValue()
+    ? new Date(sh.getRange(row, 13).getValue())
+    : new Date(activityStart);
+
+  activityStart.setHours(0,0,0,0);
+  activityEnd.setHours(23,59,59,999);
+
+  const unavailable = new Set();
+
+  // 🔥 CHECK OTHER ACTIVITIES
+  data.forEach((r, i) => {
+
+    const currentRow = i + 2;
+    if (currentRow === row) return;
+
+    const status = (r[18] || "").toLowerCase();
+    if (status === "denied" || status === "referred") return;
+
+    const assigned = String(r[17] || "").trim();
+    if (!assigned) return;
+
+    const otherStart = new Date(r[10]);
+    const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
+
+    otherStart.setHours(0,0,0,0);
+    otherEnd.setHours(23,59,59,999);
+
+    if (
+      activityStart <= otherEnd &&
+      activityEnd >= otherStart
+    ) {
+      assigned.split(",").forEach(name => {
+        unavailable.add(name.trim().toLowerCase());
+      });
+    }
+
+  });
+
+  // 🔥 CHECK LEAVE
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+  if (leaveSheet) {
+
+    const leaveData = leaveSheet.getDataRange().getValues();
+    leaveData.shift();
+
+    leaveData.forEach(r => {
+
+      const leaveName = String(r[0]).trim().toLowerCase();
+      const leaveStart = new Date(r[1]);
+      const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+      leaveStart.setHours(0,0,0,0);
+      leaveEnd.setHours(23,59,59,999);
+
+      if (
+        activityStart <= leaveEnd &&
+        activityEnd >= leaveStart
+      ) {
+        unavailable.add(leaveName);
+      }
+
+    });
+  }
+
+  Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
+
+  return [...unavailable];
+}
+
+function getDashboardStats(){
+
 const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
 const data = sh.getDataRange().getValues();
 data.shift();
 
-const activityStart = new Date(sh.getRange(row, 11).getValue());
-const activityEnd = sh.getRange(row, 13).getValue()
-? new Date(sh.getRange(row, 13).getValue())
-: new Date(activityStart);
+let stats={
+total:0,
+conducted:0,
+assigned:0,
+unassigned:0,
+denied:0,
+referred:0,
+byType:{},
+byMunicipality:{},
+byStaff:{}
+};
 
-activityStart.setHours(0,0,0,0);
-activityEnd.setHours(23,59,59,999);
+data.forEach(r=>{
 
-const unavailable = new Set();
+stats.total++;
 
-// 🔒 Statuses that should NOT block availability
-const skipStatuses = ["denied","referred","cancelled","rescheduled"];
+const status = (r[18] || "").toString().trim().toLowerCase();
+const assigned = (r[17] || "").toString().trim();
+let type = (r[6] || "").toString().trim().toLowerCase();
+let municipality = (r[4] || "").toString().trim().toLowerCase();
 
-// 🔥 CHECK OTHER ACTIVITIES
-data.forEach((r, i) => {
 
-const currentRow = i + 2;
-if (currentRow === row) return;
+/* ======================
+STATUS COUNTS
+====================== */
 
-const status = String(r[18] || "").toLowerCase().trim();
+if(status==="conducted") stats.conducted++;
+if(status==="denied") stats.denied++;
+if(status==="referred") stats.referred++;
 
-// Skip activities that should not block staff
-if (skipStatuses.includes(status)) return;
-
-const assigned = String(r[17] || "").trim();
-if (!assigned) return;
-
-const otherStart = new Date(r[10]);
-const otherEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
-
-otherStart.setHours(0,0,0,0);
-otherEnd.setHours(23,59,59,999);
-
-// 🔒 Prevent double booking when dates overlap
-if (
-  activityStart <= otherEnd &&
-  activityEnd >= otherStart
-) {
-  assigned.split(",").forEach(name => {
-
-    const cleaned = name.trim().toLowerCase();
-    if (cleaned) unavailable.add(cleaned);
-
-  });
+if(assigned && assigned.toLowerCase()!=="unassigned"){
+stats.assigned++;
+}else{
+stats.unassigned++;
 }
 
 
-});
+/* ======================
+ACTIVITY TYPES
+(split multi types)
+====================== */
 
-// 🔥 CHECK LEAVE
-const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
-if (leaveSheet) {
+if(type){
 
+type.split(",").forEach(t=>{
 
-const leaveData = leaveSheet.getDataRange().getValues();
-leaveData.shift();
+const key = t.trim().toLowerCase();
+if(!key) return;
 
-leaveData.forEach(r => {
-
-  const leaveName = String(r[0]).trim().toLowerCase();
-  const leaveStart = new Date(r[1]);
-  const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
-
-  leaveStart.setHours(0,0,0,0);
-  leaveEnd.setHours(23,59,59,999);
-
-  if (
-    activityStart <= leaveEnd &&
-    activityEnd >= leaveStart
-  ) {
-    unavailable.add(leaveName);
-  }
+stats.byType[key]=(stats.byType[key]||0)+1;
 
 });
-
 
 }
 
-Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
 
-return [...unavailable];
+/* ======================
+MUNICIPALITY CLEANING
+(remove ", quezon")
+====================== */
+
+if(municipality){
+
+municipality = municipality
+.replace(", quezon","")
+.replace(" quezon","")
+.trim();
+
+stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
+
+}
+
+
+/* ======================
+STAFF COUNTS
+====================== */
+
+if(assigned){
+
+assigned.split(",").forEach(name=>{
+
+const key=name.trim().toLowerCase();
+if(!key) return;
+
+stats.byStaff[key]=(stats.byStaff[key]||0)+1;
+
+});
+
+}
+
+});
+
+return stats;
+
 }
