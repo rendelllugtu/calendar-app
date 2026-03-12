@@ -111,7 +111,7 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 10000;
+        z-index: 20000;
         left: 0; top: 0;
         width: 100%; height: 100%;
         background: rgba(0,0,0,0.5);
@@ -124,7 +124,7 @@
         max-width: 500px;
         border-radius: 8px;
         position: relative;
-        z-index: 10001;
+        z-index: 20001;
       }
       .loader {
         border: 6px solid #f3f3f3;
@@ -179,9 +179,9 @@
         width: 100%;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         padding: 10px;
-        max-height: 200px;
+        max-height: 150px;
         overflow-y: auto;
-        z-index: 99;
+        z-index: 100;
       }
       .dropdown-content label {
         display: flex;
@@ -906,6 +906,13 @@ peopleList.forEach(p => {
       alert("Error loading people.");
     });
 
+    // 🔥 Close modals when clicking outside content
+  document.getElementById("assignModal").addEventListener("click", function(e){
+    if (e.target === this) {
+      this.style.display = "none";
+    }
+  });
+
   // ✅ ADD THIS (Cancel Update button fix)
   document.getElementById("cancelUpdate").addEventListener("click", function () {
     document.getElementById("updateModal").style.display = "none";
@@ -1193,6 +1200,11 @@ personFilter.addEventListener("change", function () {
 };
 
       function openAssignModal(details) {
+
+        // 🔥 CLOSE DROPDOWNS FIRST
+  document.querySelectorAll(".dropdown").forEach(d=>{
+    d.classList.remove("show");
+  });
 
   document.getElementById("assignModal").style.display = "block";
 
