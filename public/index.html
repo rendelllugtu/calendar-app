@@ -111,7 +111,7 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 20000;
+        z-index: 99999;
         left: 0; 
         top: 0;
         width: 100%; 
@@ -128,14 +128,9 @@
         max-width: 500px;
         border-radius: 8px;
         position: relative;
-        z-index: 20001;
+        z-index: 100000;
         pointer-events:auto;
       }
-
-      body.modal-open .fc {
-        pointer-events:none;
-      }
-
       .loader {
         border: 6px solid #f3f3f3;
         border-top: 6px solid #1cc88a;
@@ -1059,7 +1054,7 @@ peopleList.forEach(p => {
   loadDashboard();
 
   // Initial heatmap render
-  renderStaffHeatmap();
+  renderRollingHeatmap();
   
           // Filter handler
 personFilter.addEventListener("change", function () {
