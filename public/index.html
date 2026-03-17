@@ -506,7 +506,7 @@ border-radius:3px;
 
 <p><strong>Upload Photos (1–3):</strong></p>
 
-<input type="file" id="photoInput" accept="image/*" multiple />
+<input type="file" id="photoUpload" accept="image/*" multiple>
 
 <div class="photo-preview" id="photoPreview"></div>
 
@@ -566,6 +566,7 @@ async function apiCall(action, payload = {}) {
 }
 
       let allEvents = [];
+      let selectedPhotos = [];
       let selectedEvent = null;
       let calendar;
       let currentRowId = null;
@@ -905,6 +906,36 @@ peopleList.forEach(p => {
       console.error(err);
       alert("Error loading people.");
     });
+
+    document.getElementById("photoUpload").addEventListener("change", function(e) {
+
+  const files = e.target.files;
+  selectedPhotos = [];
+
+  if (files.length > 3) {
+    alert("Maximum 3 photos only");
+    return;
+  }
+
+  Array.from(files).forEach(file => {
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+
+      const base64 = event.target.result.split(",")[1];
+
+      selectedPhotos.push({
+        data: base64,
+        mimeType: file.type
+      });
+
+      console.log("Photos ready:", selectedPhotos.length); // ✅ debug
+    };
+
+    reader.readAsDataURL(file);
+  });
+});
 
   // ✅ ADD THIS (Cancel Update button fix)
   document.getElementById("cancelUpdate").addEventListener("click", function () {
