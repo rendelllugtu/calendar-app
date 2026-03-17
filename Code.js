@@ -407,25 +407,33 @@ function updateActivityStatus(rowId, status, photos, gps) {
     }
 
     if (photos && photos.length) {
-      const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
+  const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
 
-      photos.slice(0,3).forEach((p, i) => {
-        const blob = Utilities.newBlob(
-          Utilities.base64Decode(p.data),
-          p.mimeType,
-          `Row${row}_Photo${i+1}.jpg`
-        );
+  for (let i = 0; i < Math.min(photos.length, 3); i++) {
 
-        const file = folder.createFile(blob);
+    const p = photos[i];
 
-        file.setSharing(
-          DriveApp.Access.ANYONE_WITH_LINK,
-          DriveApp.Permission.VIEW
-        );
+    const blob = Utilities.newBlob(
+      Utilities.base64Decode(p.data),
+      p.mimeType,
+      `Row${row}_Photo${i+1}.jpg`
+    );
 
-        sh.getRange(row, 21 + i).setValue(file.getUrl());
-      });
-    }
+    const file = folder.createFile(blob);
+
+    file.setSharing(
+      DriveApp.Access.ANYONE_WITH_LINK,
+      DriveApp.Permission.VIEW
+    );
+
+    const url = file.getUrl();
+
+    Logger.log(`Writing URL to col ${21 + i}: ${url}`);
+
+    sh.getRange(row, 21 + i).setValue(url);
+    SpreadsheetApp.flush(); // 🔥 force write
+  }
+}
 
     if (status && status.toLowerCase() === "conducted") {
       const EVAL_FORM_CSS1 = "https://tinyurl.com/CSS1TAME";
