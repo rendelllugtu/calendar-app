@@ -400,7 +400,14 @@ PMNP RPMO CALABARZON
  *************************************************************/
 function updateActivityStatus(rowId, status, photos, gps) {
   try {
+
     const row = Number(rowId);
+
+    // 🔥 ✅ ADD THIS (VALIDATION — VERY IMPORTANT)
+    if (!row || isNaN(row)) {
+      throw new Error("Invalid rowId: " + rowId);
+    }
+
     const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
 
     sh.getRange(row, 19).setValue(status);
@@ -410,33 +417,44 @@ function updateActivityStatus(rowId, status, photos, gps) {
     }
 
     if (photos && photos.length) {
-  const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
+      const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
 
-  for (let i = 0; i < Math.min(photos.length, 3); i++) {
+      for (let i = 0; i < Math.min(photos.length, 3); i++) {
 
-    const p = photos[i];
+        const p = photos[i];
 
-    const blob = Utilities.newBlob(
-      Utilities.base64Decode(p.data),
-      p.mimeType,
-      `Row${row}_Photo${i+1}.jpg`
-    );
+        const blob = Utilities.newBlob(
+          Utilities.base64Decode(p.data),
+          p.mimeType,
+          `Row${row}_Photo${i+1}.jpg`
+        );
 
-    const file = folder.createFile(blob);
+        const file = folder.createFile(blob);
 
-    file.setSharing(
-      DriveApp.Access.ANYONE_WITH_LINK,
-      DriveApp.Permission.VIEW
-    );
+        file.setSharing(
+          DriveApp.Access.ANYONE_WITH_LINK,
+          DriveApp.Permission.VIEW
+        );
 
-    const url = file.getUrl();
+        const url = file.getUrl();
 
-    Logger.log(`Writing URL to col ${21 + i}: ${url}`);
+        // 🔥 ✅ ADD THESE DEBUG LOGS
+        Logger.log("Row: " + row);
+        Logger.log("Column: " + (21 + i));
+        Logger.log("URL: " + url);
 
-    sh.getRange(row, 21 + i).setValue(url);
-    SpreadsheetApp.flush(); // 🔥 force write
-  }
-}
+        // 🔥 ✅ SAFER WRITE
+        const cell = sh.getRange(row, 21 + i);
+
+        if (!cell) {
+          throw new Error("Invalid range at row " + row);
+        }
+
+        cell.setValue(url);
+
+        SpreadsheetApp.flush();
+      }
+    }
 
     if (status && status.toLowerCase() === "conducted") {
       const EVAL_FORM_CSS1 = "https://tinyurl.com/CSS1TAME";
