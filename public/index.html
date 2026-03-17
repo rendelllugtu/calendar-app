@@ -111,10 +111,14 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 10000;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
+        z-index: 99999;
+        left: 0; 
+        top: 0;
+        width: 100%; 
+        height: 100%;
         background: rgba(0,0,0,0.5);
+
+        pointer-events: auto; /* Ensure modals can receive clicks */
       }
       .modal-content {
         background: #fff;
@@ -124,7 +128,8 @@
         max-width: 500px;
         border-radius: 8px;
         position: relative;
-        z-index: 10001;
+        z-index: 100000;
+        pointer-events:auto;
       }
       .loader {
         border: 6px solid #f3f3f3;
@@ -179,9 +184,9 @@
         width: 100%;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         padding: 10px;
-        max-height: 200px;
+        max-height: 150px;
         overflow-y: auto;
-        z-index: 99;
+        z-index: 100;
       }
       .dropdown-content label {
         display: flex;
@@ -575,7 +580,11 @@ async function apiCall(action, payload = {}) {
 
   currentRowId = rowId;
 
-  document.getElementById("updateModal").style.display = "block";
+  // 🔒 Disable background clicks
+  document.body.classList.add("modal-open");
+
+  const modal = document.getElementById("updateModal");
+  modal.style.display = "block";
 
   document.getElementById("updateInfo").innerText =
   `${details.activityTitle}\nAssigned: ${details.assigned || "Unassigned"}\nEnd User: ${details.endUser}`;
@@ -939,6 +948,7 @@ peopleList.forEach(p => {
 
   // ✅ ADD THIS (Cancel Update button fix)
   document.getElementById("cancelUpdate").addEventListener("click", function () {
+    document.body.classList.remove("modal-open");
     document.getElementById("updateModal").style.display = "none";
     document.getElementById("photoInput").value = "";
     document.getElementById("photoPreview").innerHTML = "";
@@ -1068,7 +1078,7 @@ peopleList.forEach(p => {
   loadDashboard();
 
   // Initial heatmap render
-  renderStaffHeatmap();
+  renderRollingHeatmap();
   
           // Filter handler
 personFilter.addEventListener("change", function () {
@@ -1239,6 +1249,11 @@ personFilter.addEventListener("change", function () {
 };
 
       function openAssignModal(details) {
+
+        // 🔥 CLOSE DROPDOWNS FIRST
+  document.querySelectorAll(".dropdown").forEach(d=>{
+    d.classList.remove("show");
+  });
 
   document.getElementById("assignModal").style.display = "block";
 
