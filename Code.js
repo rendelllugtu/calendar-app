@@ -58,9 +58,12 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: false,
+      message: err.message
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
