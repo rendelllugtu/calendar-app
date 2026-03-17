@@ -431,11 +431,6 @@ function updateActivityStatus(rowId, status, photos, gps) {
 
         const file = folder.createFile(blob);
 
-        file.setSharing(
-          DriveApp.Access.ANYONE_WITH_LINK,
-          DriveApp.Permission.VIEW
-        );
-
         const url = file.getUrl();
 
         // 🔥 ✅ ADD THESE DEBUG LOGS
