@@ -1147,31 +1147,46 @@ personFilter.addEventListener("change", function () {
   }
 
   if (skippedFiles > 0) {
-    console.warn(skippedFiles + " image(s) were skipped.");
+    console.warn(skippedFiles + "");
   }
 
   function submitUpdate(gpsData) {
-    showLoading(true);
 
-    apiCall("updateActivityStatus", {
-      rowId: currentRowId,   // ✅ FIXED
-      status: status,
-      photos: photos,
-      gps: gpsData
-    })
-    .then((msg) => {
-      showLoading(false);
-      alert(msg);
-      document.getElementById("updateModal").style.display = "none";
-      calendar.refetchEvents(); // better than reload()
-      setTimeout(renderRollingHeatmap, 300);
-    })
-    .catch((err) => {
-      showLoading(false);
-      console.error(err);
-      alert("Error updating activity.");
-    });
-  }
+  const status = document.getElementById("activityStatus").value;
+  const photos = selectedPhotos || [];
+
+  showLoading(true);
+
+  apiCall("updateActivityStatus", {
+    rowId: currentRowId,
+    status: status,
+    photos: photos,
+    gps: gpsData
+  })
+  .then((res) => {
+    showLoading(false);
+
+    console.log("Server response:", res);
+
+    if (!res.success) {
+      alert("Error: " + (res.message || "Unknown error"));
+      return;
+    }
+
+    alert(res.message);
+
+    document.body.classList.remove("modal-open");
+    document.getElementById("updateModal").style.display = "none";
+
+    calendar.refetchEvents();
+    setTimeout(renderRollingHeatmap, 300);
+  })
+  .catch((err) => {
+    showLoading(false);
+    console.error(err);
+    alert("Error updating activity.");
+  });
+}
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(

@@ -396,57 +396,73 @@ PMNP RPMO CALABARZON
  * UPDATE ACTIVITY STATUS + PHOTO UPLOAD
  *************************************************************/
 function updateActivityStatus(rowId, status, photos, gps) {
-  const row = Number(rowId);
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  try {
+    const row = Number(rowId);
+    const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
 
-  sh.getRange(row,19).setValue(status);
+    sh.getRange(row, 19).setValue(status);
 
- if (gps && gps.lat && gps.lon) {
-  verifyMunicipalityFromGPS_(row, gps);
-}
+    if (gps && gps.lat && gps.lon) {
+      verifyMunicipalityFromGPS_(row, gps);
+    }
 
-  if (photos && photos.length) {
-    const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
-    photos.slice(0,3).forEach((p,i) => {
-      const file = folder.createFile(
-        Utilities.newBlob(
+    if (photos && photos.length) {
+      const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
+
+      photos.slice(0,3).forEach((p, i) => {
+        const blob = Utilities.newBlob(
           Utilities.base64Decode(p.data),
           p.mimeType,
           `Row${row}_Photo${i+1}.jpg`
-        )
-      );
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      sh.getRange(row,21+i).setValue(file.getUrl());
-    });
+        );
+
+        const file = folder.createFile(blob);
+
+        file.setSharing(
+          DriveApp.Access.ANYONE_WITH_LINK,
+          DriveApp.Permission.VIEW
+        );
+
+        sh.getRange(row, 21 + i).setValue(file.getUrl());
+      });
+    }
+
+    if (status && status.toLowerCase() === "conducted") {
+      const EVAL_FORM_CSS1 = "https://tinyurl.com/CSS1TAME";
+      const EVAL_FORM_CSS3 = "https://tinyurl.com/CSS3TAME";
+
+      const cell = sh.getRange(row, 26);
+
+      const line1 = "View Evaluation CSS 1.0";
+      const line2 = "View Evaluation CSS 3.0";
+      const text = `${line1}\n${line2}`;
+
+      const richText = SpreadsheetApp.newRichTextValue()
+        .setText(text)
+        .setLinkUrl(0, line1.length, EVAL_FORM_CSS1)
+        .setLinkUrl(line1.length + 1, line1.length + 1 + line2.length, EVAL_FORM_CSS3)
+        .build();
+
+      cell.setRichTextValue(richText);
+      cell.setVerticalAlignment("top");
+      cell.setWrap(true);
+    }
+
+    SpreadsheetApp.flush();
+
+    return {
+      success: true,
+      message: "Activity updated successfully"
+    };
+
+  } catch (err) {
+    Logger.log("ERROR: " + err);
+
+    return {
+      success: false,
+      message: err.toString()
+    };
   }
-
- if (status.toLowerCase() === "conducted") {
-  // Two Google Form links
-  const EVAL_FORM_CSS1 = "https://tinyurl.com/CSS1TAME";
-  const EVAL_FORM_CSS3 = "https://tinyurl.com/CSS3TAME";
-
-  const cell = sh.getRange(row, 26); // ✅ Your CSS column
-
-  // Create rich text containing two separate hyperlinks on separate lines
-  const line1 = "View Evaluation CSS 1.0";
-  const line2 = "View Evaluation CSS 3.0";
-  const text = `${line1}\n${line2}`;
-
-  const richText = SpreadsheetApp.newRichTextValue()
-  .setText(text)
-  .setLinkUrl(0, line1.length, EVAL_FORM_CSS1)
-  .setLinkUrl(line1.length + 1, line1.length + 1 + line2.length, EVAL_FORM_CSS3)
-  .build();
-
-
-  cell.setRichTextValue(richText);
-  cell.setVerticalAlignment("top");
-  cell.setWrap(true); // ensure both lines show fully
-}
-
-
-  SpreadsheetApp.flush();
-  return "Activity updated successfully";
 }
 
 /*************************************************************
