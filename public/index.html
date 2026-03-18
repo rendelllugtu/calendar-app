@@ -950,7 +950,7 @@ peopleList.forEach(p => {
   document.getElementById("cancelUpdate").addEventListener("click", function () {
     document.body.classList.remove("modal-open");
     document.getElementById("updateModal").style.display = "none";
-    document.getElementById("photoInput").value = "";
+    document.getElementById("photoUpload").value = "";
     document.getElementById("photoPreview").innerHTML = "";
   });
 
@@ -977,9 +977,9 @@ peopleList.forEach(p => {
     const statusColors = {
       "Conducted": "#28a745",     // green
       "Assigned": "#3788d8",      // blue
-      "Unassigned": "#3788d8",    // blue
+      "Unassigned": "#ffc107",    // yellow
       "Not Conducted": "#dc3545", // red
-      "Rescheduled": "#ffc107",   // yellow
+      "Rescheduled": "#6c757d",   // grey
       "Denied": "#dc3545",   // red
       "Cancelled": "#6c757d"      // grey
     };
@@ -1229,10 +1229,15 @@ personFilter.addEventListener("change", function () {
 
     console.log("Server response:", res);
 
-    if (!res.success) {
-      alert("Error: " + (res.message || "Unknown error"));
-      return;
-    }
+    if (!res || res.error) {
+  alert("Error: " + (res?.error || "Unknown error"));
+  return;
+}
+
+  if (!res.success) {
+  alert("Error: " + (res.message || "Unknown error"));
+  return;
+}
 
     alert(res.message);
 
