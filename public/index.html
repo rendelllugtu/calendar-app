@@ -986,25 +986,15 @@ peopleList.forEach(p => {
 
     const coloredEvents = data.events.map(ev => {
 
-  let status = ev.extendedProps?.status || "";
-  const assigned = ev.extendedProps?.assigned || "";
+      const status = ev.extendedProps?.status || "Assigned";
 
-  // 🔥 KEY FIX
-  if (status === "Conducted") color = green;
-  else if (!assigned || assigned === "Unassigned") color = yellow;
-  else color = blue;
-
-  let title = ev.title;
+      let title = ev.title;
 
       if (status === "Conducted") title = title;
       if (status === "Rescheduled") title = "🔁 " + title;
       if (status === "Cancelled") title = "✖ " + title;
       if (status === "Not Conducted") title = "⚠ " + title;
       if (status === "Denied") title = "⚠ " + title;
-
-      if (!assigned || assigned === "Unassigned") {
-    status = "Unassigned";
-  }
 
       return {
         ...ev,
