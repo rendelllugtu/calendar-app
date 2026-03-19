@@ -93,7 +93,6 @@ const RP_EMAILS = {
   "Emerene Pingol": "emaildocuments.1974@gmail.com",
   "Jodel Castillo": "mjrhcastillornd@gmail.com",
   "Camille Castañeda": "cascastaneda@ro4a.doh.gov.ph",
-  "Cecille Lumbria": "lumbriaces.pmnp.doh@gmail.com",
   "Kay Legaspi": "kaydizon54@gmail.com",
   "Mark Reblora": "i.mark.reblora@gmail.com",
   "Mary Rose Comendador": "maryrose.lumbria.comendador@gmail.com",
@@ -105,6 +104,7 @@ const RP_EMAILS = {
   "Cielo Cruz": "cielolaleicruz@gmail.com",
   "Lau Tamondong": "lauren.tamondong@gmail.com",
   "Kent Solibaga": "jksolibaga.rnd@gmail.com",
+  "Dan Mark De La Cruz": "dmdc28123@gmail.com",
   "PDOHO Quezon": "pdohoquezon.nutrition@gmail.com"
 };
 
@@ -150,10 +150,10 @@ function getCalendarData() {
 
   const people = new Set([
     "Katherine Andujare", "Rendell Lugtu", "Krisha Cajucom", "Emerene Pingol",
-    "Jodel Castillo", "Camille Castañeda", "Cecille Lumbria", "Mark Reblora",
-    "Kay Legaspi", "Mary Rose Comendador", "MK Nolledo", "Jonathan Anat",
-    "Paul Vicuña", "Emmanuel Umali", "Genella Moreno", "Cielo Cruz", "Lau Tamondong", 
-    "Kent Solibaga", "PDOHO Quezon", "Refer", "Unassigned", "Deny"
+    "Jodel Castillo", "Camille Castañeda", "Mark Reblora", "Kay Legaspi",
+    "Mary Rose Comendador", "MK Nolledo", "Jonathan Anat", "Paul Vicuña",
+    "Emmanuel Umali", "Genella Moreno", "Cielo Cruz", "Lau Tamondong", 
+    "Kent Solibaga", "Dan Mark De La Cruz", "PDOHO Quezon", "Refer", "Unassigned", "Deny"
   ]);
 
   const events = [];
