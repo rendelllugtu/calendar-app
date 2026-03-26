@@ -310,6 +310,7 @@ border-radius:3px;
 .low{background:#02ff3d;}
 .mid{background:#ffc107;}
 .high{background:#dc3545;}
+.unavailable{background:#6c757d;}
 
     </style>
   </head>
@@ -440,9 +441,9 @@ border-radius:3px;
   <div id="calendar"></div>
   <div class="heatmap-panel">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <button onclick="changeHeatmapWeek(-1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">◀ Prev Week</button>
+    <button onclick="changeHeatmapWeek(-1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">◀</button>
     <h3 style="margin:0;" id="heatmapTitle">📊 Staff Load</h3>
-    <button onclick="changeHeatmapWeek(1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">Next Week ▶</button>
+    <button onclick="changeHeatmapWeek(1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">▶</button>
   </div>
   <div id="rollingHeatmap"></div>
 </div>
@@ -800,7 +801,7 @@ assigned.split(",").forEach(name=>{
 const staff = name.trim().toLowerCase();
 if(!staff) return;
 
-if(!heat[staff]) heat[staff] = Array(10).fill(0);
+if(!heat[staff]) heat[staff] = Array(14).fill(0);
 
 let current = new Date(start);
 
@@ -821,6 +822,39 @@ current.setDate(current.getDate()+1);
 });
 
 });
+
+// Fetch unavailable staff for the date range
+const unavailableMap = {};
+
+(async () => {
+  try {
+    const startStr = startDate.toISOString().split('T')[0];
+    const endStr = endDate.toISOString().split('T')[0];
+    const unavailable = await apiCall("getUnavailableStaffForDateRange", {
+      startDate: startStr,
+      endDate: endStr
+    });
+    
+    // Build unavailable map: key is "staffname|month-day"
+    unavailable.forEach(entry => {
+      const parts = entry.split('|');
+      if (parts.length >= 2) {
+        const staffName = parts[0].trim().toLowerCase();
+        const dateStr = parts[1];
+        const key = staffName + '|' + dateStr;
+        unavailableMap[key] = true;
+      }
+    });
+    
+    // Re-render with unavailable data
+    renderHeatmapWithUnavailable();
+  } catch (err) {
+    console.error("Failed to fetch unavailable staff:", err);
+    renderHeatmapWithUnavailable();
+  }
+})();
+
+function renderHeatmapWithUnavailable() {
 
 function buildWeek(days,startIndex){
 
@@ -855,7 +889,14 @@ const val=data[startIndex+i] || 0;
 
 let cls="";
 
-if(val>=3) cls="high";
+// Check if staff is unavailable on this day
+const day = days[i];
+const dateKey = (day.getMonth() + 1) + '-' + day.getDate();
+const unavailKey = staff + '|' + dateKey;
+
+if (unavailableMap[unavailKey]) {
+  cls = "unavailable";
+} else if(val>=3) cls="high";
 else if(val>=2) cls="mid";
 else if(val>=1) cls="low";
 
@@ -880,6 +921,8 @@ html+=buildWeek(week1,0);
 html+=buildWeek(week2,7);
 
 document.getElementById("rollingHeatmap").innerHTML = html;
+
+}
 
 }
 

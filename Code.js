@@ -23,6 +23,10 @@ function doGet(e) {
     result = getUnavailableStaffForDate(body.rowId);
   }
 
+  if (action === "getUnavailableStaffForDateRange") {
+    result = getUnavailableStaffForDateRange(body.startDate, body.endDate);
+  }
+
   return ContentService
     .createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -51,6 +55,10 @@ function doPost(e) {
 
     if (body.action === "getUnavailableStaffForDate") {
       result = getUnavailableStaffForDate(body.rowId);
+    }
+
+    if (body.action === "getUnavailableStaffForDateRange") {
+      result = getUnavailableStaffForDateRange(body.startDate, body.endDate);
     }
 
     return ContentService
@@ -845,6 +853,63 @@ function getUnavailableStaffForDate(rowId) {
   }
 
   Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
+
+  return [...unavailable];
+}
+
+function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
+  const startDate = new Date(startDateStr);
+  const endDate = new Date(endDateStr);
+  
+  startDate.setHours(0,0,0,0);
+  endDate.setHours(23,59,59,999);
+
+  const unavailable = new Set();
+
+  // Check activities
+  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
+  const data = sh.getDataRange().getValues();
+  data.shift();
+
+  data.forEach((r) => {
+    const status = (r[18] || "").toLowerCase();
+    if (status === "denied" || status === "referred") return;
+
+    const assigned = String(r[17] || "").trim();
+    if (!assigned) return;
+
+    const activityStart = new Date(r[10]);
+    const activityEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
+
+    activityStart.setHours(0,0,0,0);
+    activityEnd.setHours(23,59,59,999);
+
+    if (startDate <= activityEnd && endDate >= activityStart) {
+      assigned.split(",").forEach(name => {
+        unavailable.add(name.trim().toLowerCase());
+      });
+    }
+  });
+
+  // Check leave
+  const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
+  if (leaveSheet) {
+    const leaveData = leaveSheet.getDataRange().getValues();
+    leaveData.shift();
+
+    leaveData.forEach(r => {
+      const leaveName = String(r[0]).trim().toLowerCase();
+      const leaveStart = new Date(r[1]);
+      const leaveEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+      leaveStart.setHours(0,0,0,0);
+      leaveEnd.setHours(23,59,59,999);
+
+      if (startDate <= leaveEnd && endDate >= leaveStart) {
+        unavailable.add(leaveName);
+      }
+    });
+  }
 
   return [...unavailable];
 }
