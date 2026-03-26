@@ -439,7 +439,11 @@ border-radius:3px;
 <div id="calendar-container">
   <div id="calendar"></div>
   <div class="heatmap-panel">
-  <h3>📊 Staff Load (Next 10 Days)</h3>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <button onclick="changeHeatmapWeek(-1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">◀ Prev Week</button>
+    <h3 style="margin:0;" id="heatmapTitle">📊 Staff Load</h3>
+    <button onclick="changeHeatmapWeek(1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">Next Week ▶</button>
+  </div>
   <div id="rollingHeatmap"></div>
 </div>
 
@@ -739,12 +743,20 @@ document.getElementById("staffChart").innerHTML=html;
 
 }
 
-function renderRollingHeatmap(){
+let heatmapWeekOffset = 0;
 
-const today = new Date();
+function changeHeatmapWeek(delta){
+  heatmapWeekOffset += delta;
+  renderRollingHeatmap();
+}
+
+function renderRollingHeatmap(){
 const days = [];
 
 /* Get next 14 days (including weekends for Mon-Sun display) */
+
+let today = new Date();
+today.setDate(today.getDate() + (heatmapWeekOffset * 7));
 
 let d = new Date(today);
 
@@ -758,6 +770,12 @@ d.setDate(d.getDate()+1);
 
 const week1 = days.slice(0,7);
 const week2 = days.slice(7,14);
+
+// Update title with date range
+const startDate = week1[0];
+const endDate = week2[6];
+const title = `📊 Staff Load (${startDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${endDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})})`;
+document.getElementById('heatmapTitle').textContent = title;
 
 const heat = {};
 
