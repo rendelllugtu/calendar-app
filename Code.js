@@ -864,32 +864,7 @@ function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
   startDate.setHours(0,0,0,0);
   endDate.setHours(23,59,59,999);
 
-  const unavailable = new Set();
-
-  // Check activities
-  const sh = SpreadsheetApp.getActive().getSheetByName("Form Responses 1");
-  const data = sh.getDataRange().getValues();
-  data.shift();
-
-  data.forEach((r) => {
-    const status = (r[18] || "").toLowerCase();
-    if (status === "denied" || status === "referred") return;
-
-    const assigned = String(r[17] || "").trim();
-    if (!assigned) return;
-
-    const activityStart = new Date(r[10]);
-    const activityEnd = r[12] ? new Date(r[12]) : new Date(r[10]);
-
-    activityStart.setHours(0,0,0,0);
-    activityEnd.setHours(23,59,59,999);
-
-    if (startDate <= activityEnd && endDate >= activityStart) {
-      assigned.split(",").forEach(name => {
-        unavailable.add(name.trim().toLowerCase());
-      });
-    }
-  });
+  const unavailable = [];
 
   // Check leave
   const leaveSheet = SpreadsheetApp.getActive().getSheetByName("Leave");
@@ -906,12 +881,19 @@ function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
       leaveEnd.setHours(23,59,59,999);
 
       if (startDate <= leaveEnd && endDate >= leaveStart) {
-        unavailable.add(leaveName);
+        // Iterate through each day in the leave range
+        const current = new Date(leaveStart);
+        while (current <= leaveEnd) {
+          const month = current.getMonth() + 1;
+          const day = current.getDate();
+          unavailable.push(leaveName + '|' + month + '-' + day);
+          current.setDate(current.getDate() + 1);
+        }
       }
     });
   }
 
-  return [...unavailable];
+  return unavailable;
 }
 
 function getDashboardStats(){
