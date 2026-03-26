@@ -279,7 +279,7 @@ margin-bottom:12px;
 
 .heat-header{
 display:grid;
-grid-template-columns:110px repeat(5,24px);
+grid-template-columns:110px repeat(7,24px);
 gap:4px;
 font-size:11px;
 font-weight:bold;
@@ -291,7 +291,7 @@ text-align:center;
 
 .heat-row{
 display:grid;
-grid-template-columns:110px repeat(5,24px);
+grid-template-columns:110px repeat(7,24px);
 align-items:center;
 gap:4px;
 margin-top:4px;
@@ -310,6 +310,7 @@ border-radius:3px;
 .low{background:#02ff3d;}
 .mid{background:#ffc107;}
 .high{background:#dc3545;}
+.unavailable{background:#6c757d;}
 
     </style>
   </head>
@@ -439,7 +440,11 @@ border-radius:3px;
 <div id="calendar-container">
   <div id="calendar"></div>
   <div class="heatmap-panel">
-  <h3>📊 Staff Load (Next 10 Days)</h3>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <button onclick="changeHeatmapWeek(-1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">◀</button>
+    <h3 style="margin:0;" id="heatmapTitle">📊 Staff Load</h3>
+    <button onclick="changeHeatmapWeek(1)" style="cursor:pointer;padding:4px 12px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;">▶</button>
+  </div>
   <div id="rollingHeatmap"></div>
 </div>
 
@@ -739,27 +744,45 @@ document.getElementById("staffChart").innerHTML=html;
 
 }
 
-function renderRollingHeatmap(){
+let heatmapWeekOffset = 0;
 
-const today = new Date();
+function changeHeatmapWeek(delta){
+  heatmapWeekOffset += delta;
+  renderRollingHeatmap();
+}
+
+function renderRollingHeatmap(){
 const days = [];
 
-/* Get next 10 weekdays */
+/* Get next 14 days starting from Monday (including weekends for Mon-Sun display) */
 
+let today = new Date();
+today.setDate(today.getDate() + (heatmapWeekOffset * 7));
+
+// Find the next Monday (or today if it's Monday)
 let d = new Date(today);
-
-while(days.length < 10){
-
-if(d.getDay() !== 0 && d.getDay() !== 6){
-days.push(new Date(d));
+const dayOfWeek = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+if (dayOfWeek !== 1) {
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek);
+  d.setDate(d.getDate() + daysUntilMonday);
 }
+
+while(days.length < 14){
+
+days.push(new Date(d));
 
 d.setDate(d.getDate()+1);
 
 }
 
-const week1 = days.slice(0,5);
-const week2 = days.slice(5,10);
+const week1 = days.slice(0,7);
+const week2 = days.slice(7,14);
+
+// Update title with date range
+const startDate = week1[0];
+const endDate = week2[6];
+const title = `📊 Staff Load (${startDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${endDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})})`;
+document.getElementById('heatmapTitle').textContent = title;
 
 const heat = {};
 
@@ -778,7 +801,7 @@ assigned.split(",").forEach(name=>{
 const staff = name.trim().toLowerCase();
 if(!staff) return;
 
-if(!heat[staff]) heat[staff] = Array(10).fill(0);
+if(!heat[staff]) heat[staff] = Array(14).fill(0);
 
 let current = new Date(start);
 
@@ -799,6 +822,39 @@ current.setDate(current.getDate()+1);
 });
 
 });
+
+// Fetch unavailable staff for the date range
+const unavailableMap = {};
+
+(async () => {
+  try {
+    const startStr = startDate.toISOString().split('T')[0];
+    const endStr = endDate.toISOString().split('T')[0];
+    const unavailable = await apiCall("getUnavailableStaffForDateRange", {
+      startDate: startStr,
+      endDate: endStr
+    });
+    
+    // Build unavailable map: key is "staffname|month-day"
+    unavailable.forEach(entry => {
+      const parts = entry.split('|');
+      if (parts.length >= 2) {
+        const staffName = parts[0].trim().toLowerCase();
+        const dateStr = parts[1];
+        const key = staffName + '|' + dateStr;
+        unavailableMap[key] = true;
+      }
+    });
+    
+    // Re-render with unavailable data
+    renderHeatmapWithUnavailable();
+  } catch (err) {
+    console.error("Failed to fetch unavailable staff:", err);
+    renderHeatmapWithUnavailable();
+  }
+})();
+
+function renderHeatmapWithUnavailable() {
 
 function buildWeek(days,startIndex){
 
@@ -827,13 +883,20 @@ html+=`<div class="heat-row">`;
 
 html+=`<div class="staff-name">${toTitleCase(staff)}</div>`;
 
-for(let i=0;i<5;i++){
+for(let i=0;i<7;i++){
 
 const val=data[startIndex+i] || 0;
 
 let cls="";
 
-if(val>=3) cls="high";
+// Check if staff is unavailable on this day
+const day = days[i];
+const dateKey = (day.getMonth() + 1) + '-' + day.getDate();
+const unavailKey = staff + '|' + dateKey;
+
+if (unavailableMap[unavailKey]) {
+  cls = "unavailable";
+} else if(val>=3) cls="high";
 else if(val>=2) cls="mid";
 else if(val>=1) cls="low";
 
@@ -855,9 +918,11 @@ return html;
 let html="";
 
 html+=buildWeek(week1,0);
-html+=buildWeek(week2,5);
+html+=buildWeek(week2,7);
 
 document.getElementById("rollingHeatmap").innerHTML = html;
+
+}
 
 }
 
