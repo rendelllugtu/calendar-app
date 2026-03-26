@@ -279,7 +279,7 @@ margin-bottom:12px;
 
 .heat-header{
 display:grid;
-grid-template-columns:110px repeat(5,24px);
+grid-template-columns:110px repeat(7,24px);
 gap:4px;
 font-size:11px;
 font-weight:bold;
@@ -291,7 +291,7 @@ text-align:center;
 
 .heat-row{
 display:grid;
-grid-template-columns:110px repeat(5,24px);
+grid-template-columns:110px repeat(7,24px);
 align-items:center;
 gap:4px;
 margin-top:4px;
@@ -744,22 +744,20 @@ function renderRollingHeatmap(){
 const today = new Date();
 const days = [];
 
-/* Get next 10 weekdays */
+/* Get next 14 days (including weekends for Mon-Sun display) */
 
 let d = new Date(today);
 
-while(days.length < 10){
+while(days.length < 14){
 
-if(d.getDay() !== 0 && d.getDay() !== 6){
 days.push(new Date(d));
-}
 
 d.setDate(d.getDate()+1);
 
 }
 
-const week1 = days.slice(0,5);
-const week2 = days.slice(5,10);
+const week1 = days.slice(0,7);
+const week2 = days.slice(7,14);
 
 const heat = {};
 
@@ -827,7 +825,7 @@ html+=`<div class="heat-row">`;
 
 html+=`<div class="staff-name">${toTitleCase(staff)}</div>`;
 
-for(let i=0;i<5;i++){
+for(let i=0;i<7;i++){
 
 const val=data[startIndex+i] || 0;
 
@@ -855,7 +853,7 @@ return html;
 let html="";
 
 html+=buildWeek(week1,0);
-html+=buildWeek(week2,5);
+html+=buildWeek(week2,7);
 
 document.getElementById("rollingHeatmap").innerHTML = html;
 
