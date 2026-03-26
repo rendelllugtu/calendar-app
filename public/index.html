@@ -753,12 +753,18 @@ function changeHeatmapWeek(delta){
 function renderRollingHeatmap(){
 const days = [];
 
-/* Get next 14 days (including weekends for Mon-Sun display) */
+/* Get next 14 days starting from Monday (including weekends for Mon-Sun display) */
 
 let today = new Date();
 today.setDate(today.getDate() + (heatmapWeekOffset * 7));
 
+// Find the next Monday (or today if it's Monday)
 let d = new Date(today);
+const dayOfWeek = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+if (dayOfWeek !== 1) {
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek);
+  d.setDate(d.getDate() + daysUntilMonday);
+}
 
 while(days.length < 14){
 
