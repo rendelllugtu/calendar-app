@@ -917,6 +917,33 @@ function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
     });
   }
 
+  // Check Unavailable Staff due to Regional Activities
+  const regionalSheet = SpreadsheetApp.getActive().getSheetByName("Regional Activities");
+  if (regionalSheet) {
+    const regionalData = regionalSheet.getDataRange().getValues();
+    regionalData.shift();
+
+    regionalData.forEach(r => {
+      const staffName = String(r[0]).trim().toLowerCase();
+      const regionalStart = new Date(r[1]);
+      const regionalEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+      regionalStart.setHours(0,0,0,0);
+      regionalEnd.setHours(23,59,59,999);
+
+      if (startDate <= regionalEnd && endDate >= regionalStart) {
+        // Iterate through each day in the regional activity range
+        const current = new Date(regionalStart);
+        while (current <= regionalEnd) {
+          const month = current.getMonth() + 1;
+          const day = current.getDate();
+          unavailable.push(staffName + '|' + month + '-' + day);
+          current.setDate(current.getDate() + 1);
+        }
+      }
+    });
+  }
+
   return unavailable;
 }
 
