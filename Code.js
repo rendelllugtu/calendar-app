@@ -185,7 +185,9 @@ function getCalendarData() {
     const assigned = r[17] || "Unassigned";
     const status = r[18] || "";  // 🔥 STATUS COLUMN (Column 19 in sheet)
 
-    people.add(assigned);
+    if (!assigned.toLowerCase().includes("cecille lumbria")) {
+      people.add(assigned);
+    }
 
     // 🔥 Default color (Assigned / Pending)
     let bgColor = "#3788d8"; // blue
