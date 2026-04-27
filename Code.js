@@ -291,7 +291,7 @@ if (regionalSheet) {
 
 }
 
-  return { events, people: [...people].sort() };
+  return { events, people: [...people].sort().filter(p => p !== "Cecille Lumbria") };
 }
 
 /*************************************************************
