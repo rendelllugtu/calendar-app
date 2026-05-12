@@ -486,32 +486,6 @@ border-radius:3px;
   </div>
 </div>
 
-<!-- Activity Details Modal -->
-
-<div id="detailsModal" class="modal">
-  <div class="modal-content">
-    <h3>📋 Activity Details</h3>
-    <div id="detailsInfo"></div>
-    <hr>
-    <div style="margin:15px 0;">
-      <label for="detailsComment" style="font-weight:bold; display:flex; align-items:center; gap:5px;">
-        📝 Activity Notes/Comments
-        <span id="commentCounter" style="font-size:12px; color:#666;">(0/500)</span>
-        <small style="font-weight:normal; color:#888;">(Ctrl+Enter to save)</small>
-      </label>
-      <textarea id="detailsComment" rows="3" placeholder="Add notes, updates, or feedback about this activity..." maxlength="500" style="width:100%; resize:vertical; min-height:60px;"></textarea>
-    </div>
-    <div id="commentFeedback" style="margin:10px 0; display:none; padding:8px; border-radius:4px;"></div>
-    <div style="margin-top:15px;text-align:right;">
-      <button class="btn" id="clearCommentBtn" style="background:#ffc107; color:#000;">🗑 Clear</button>
-      <button class="btn" id="saveCommentBtn">💾 Save Comment</button>
-      <button class="btn" id="updateActivityBtn">🔄 Update Activity</button>
-      <button class="btn" id="assignPersonBtn">👤 Assign Person</button>
-      <button type="button" class="btn" style="background:#888;" id="closeDetailsBtn">✖ Close</button>
-    </div>
-  </div>
-</div>
-
 <!-- Update Activity Modal -->
 
 <div id="updateModal" class="modal">
@@ -531,9 +505,6 @@ border-radius:3px;
   <option value="Rescheduled">Rescheduled</option>
   <option value="Cancelled">Cancelled</option>
 </select>
-
-<p><strong>Comment:</strong></p>
-<textarea id="activityComment" rows="3" placeholder="Add a comment about this activity..."></textarea>
 
 <p><strong>Upload Photos (1–3):</strong></p>
 
@@ -602,35 +573,6 @@ async function apiCall(action, payload = {}) {
       let calendar;
       let currentRowId = null;
 
-      function openDetailsModal(details) {
-
-  // 🔒 Disable background clicks
-  document.body.classList.add("modal-open");
-
-  const modal = document.getElementById("detailsModal");
-  modal.style.display = "block";
-
-  document.getElementById("detailsInfo").innerHTML = `
-    <strong>${details.activityTitle}</strong><br>
-    Type: ${details.type}<br>
-    Assigned: ${details.assigned || "Unassigned"}<br>
-    Municipality: ${details.municipality}<br>
-    End User: ${details.endUser}<br>
-    Status: ${details.status || "Assigned"}
-  `;
-
-  const commentTextarea = document.getElementById("detailsComment");
-  commentTextarea.value = details.comment || "";
-  updateCommentCounter();
-
-  // Auto-resize
-  commentTextarea.style.height = 'auto';
-  commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
-
-  // Focus on comment for priority
-  setTimeout(() => commentTextarea.focus(), 100);
-}
-
       function openUpdateModal(details, rowId) {
 
   currentRowId = rowId;
@@ -643,8 +585,6 @@ async function apiCall(action, payload = {}) {
 
   document.getElementById("updateInfo").innerText =
   `${details.activityTitle}\nAssigned: ${details.assigned || "Unassigned"}\nEnd User: ${details.endUser}`;
-
-  document.getElementById("activityComment").value = details.comment || "";
 }
 
       // ===== Custom Hover Tooltip =====
@@ -1065,7 +1005,7 @@ peopleList.forEach(p => {
   document.getElementById("cancelUpdate").addEventListener("click", function () {
     document.body.classList.remove("modal-open");
     document.getElementById("updateModal").style.display = "none";
-    document.getElementById("photoUpload").value = "";
+    document.getElementById("photoInput").value = "";
     document.getElementById("photoPreview").innerHTML = "";
   });
 
@@ -1092,29 +1032,24 @@ peopleList.forEach(p => {
     const statusColors = {
       "Conducted": "#28a745",     // green
       "Assigned": "#3788d8",      // blue
-      "Unassigned": "#ffc107",    // yellow
+      "Unassigned": "#3788d8",    // blue
       "Not Conducted": "#dc3545", // red
-      "Rescheduled": "#6c757d",   // grey
+      "Rescheduled": "#ffc107",   // yellow
       "Denied": "#dc3545",   // red
       "Cancelled": "#6c757d"      // grey
     };
 
     const coloredEvents = data.events.map(ev => {
 
-      let status = ev.extendedProps?.status || "";
-      const assigned = ev.extendedProps?.assigned || "";
+      const status = ev.extendedProps?.status || "Assigned";
 
-        let title = ev.title;
+      let title = ev.title;
 
       if (status === "Conducted") title = title;
       if (status === "Rescheduled") title = "🔁 " + title;
       if (status === "Cancelled") title = "✖ " + title;
       if (status === "Not Conducted") title = "⚠ " + title;
       if (status === "Denied") title = "⚠ " + title;
-
-      if (!assigned || assigned === "Unassigned") {
-    status = "Unassigned";
-  }
 
       return {
         ...ev,
@@ -1149,8 +1084,6 @@ peopleList.forEach(p => {
       info.el.addEventListener("mouseenter", function (e) {
         const details = info.event.extendedProps;
 
-        const commentPreview = details.comment ? details.comment.length > 100 ? details.comment.substring(0, 100) + "..." : details.comment : "None";
-
         tooltip.innerHTML = `
           <div style="font-weight:600; font-size:14px; margin-bottom:6px;">
             ${details.activityTitle || "No Title"}
@@ -1159,7 +1092,6 @@ peopleList.forEach(p => {
           <div><strong>Assigned:</strong> ${details.assigned || "Unassigned"}</div>
           <div><strong>Municipality:</strong> ${details.municipality || "N/A"}</div>
           <div><strong>End User:</strong> ${details.endUser || ""}</div>
-          <div><strong>Comment:</strong> ${commentPreview}</div>
         `;
 
         tooltip.style.display = "block";
@@ -1179,22 +1111,15 @@ peopleList.forEach(p => {
     },
 
     eventClick: function(info) {
-
+      
       if (info.event.extendedProps.regional) {
     return;
   }
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
-      openDetailsModal(details);
-    }
-      selectedEvent = info.event;
-      const details = info.event.extendedProps;
-
-  const commentText = details.comment ? `\nComment: ${details.comment}` : '';
-
-  const choice = confirm(
-`You clicked "${details.activityTitle || info.event.title}"${commentText}\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
+      const choice = confirm(
+  `You clicked "${details.activityTitle || info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
 );
 
       if (choice) openUpdateModal(details, info.event.id);
@@ -1262,7 +1187,6 @@ personFilter.addEventListener("change", function () {
       document.getElementById("saveUpdate").onclick = async () => {
 
   const status = document.getElementById("activityStatus").value;
-  const comment = document.getElementById("activityComment").value;
   const photoInput = document.getElementById("photoUpload");
 
   if (!photoInput) {
@@ -1352,7 +1276,6 @@ personFilter.addEventListener("change", function () {
   apiCall("updateActivityStatus", {
     rowId: currentRowId,
     status: status,
-    comment: comment,
     photos: photos,
     gps: gpsData
   })
@@ -1361,15 +1284,10 @@ personFilter.addEventListener("change", function () {
 
     console.log("Server response:", res);
 
-    if (!res || res.error) {
-  alert("Error: " + (res?.error || "Unknown error"));
-  return;
-}
-
-  if (!res.success) {
-  alert("Error: " + (res.message || "Unknown error"));
-  return;
-}
+    if (!res.success) {
+      alert("Error: " + (res.message || "Unknown error"));
+      return;
+    }
 
     alert(res.message);
 
@@ -1518,87 +1436,6 @@ personFilter.addEventListener("change", function () {
           document.querySelectorAll(".dropdown").forEach(dd => dd.classList.remove("show"));
         }
       };
-
-      // Comment counter and auto-resize
-      function updateCommentCounter() {
-        const textarea = document.getElementById("detailsComment");
-        const counter = document.getElementById("commentCounter");
-        const length = textarea.value.length;
-        counter.textContent = `(${length}/500)`;
-        counter.style.color = length > 450 ? '#dc3545' : '#666';
-      }
-
-      document.getElementById("detailsComment").addEventListener("input", function() {
-        updateCommentCounter();
-        this.style.height = 'auto';
-        this.style.height = this.scrollHeight + 'px';
-      });
-
-      // Keyboard shortcut: Ctrl+Enter to save comment
-      document.getElementById("detailsComment").addEventListener("keydown", function(e) {
-        if (e.ctrlKey && e.key === "Enter") {
-          e.preventDefault();
-          document.getElementById("saveCommentBtn").click();
-        }
-      });
-
-      // Clear comment
-      document.getElementById("clearCommentBtn").addEventListener("click", function () {
-        if (confirm("Clear the comment?")) {
-          document.getElementById("detailsComment").value = "";
-          updateCommentCounter();
-        }
-      });
-
-      // Details modal buttons
-      document.getElementById("saveCommentBtn").addEventListener("click", function () {
-        const comment = document.getElementById("detailsComment").value;
-        const feedback = document.getElementById("commentFeedback");
-        const btn = this;
-
-        // Show saving
-        btn.disabled = true;
-        btn.textContent = "⏳ Saving...";
-        feedback.style.display = "block";
-        feedback.style.background = "#fff3cd";
-        feedback.style.color = "#856404";
-        feedback.textContent = "Saving comment...";
-
-        apiCall("updateComment", { rowId: selectedEvent.extendedProps.row, comment: comment })
-          .then(() => {
-            feedback.style.background = "#d4edda";
-            feedback.style.color = "#155724";
-            feedback.textContent = "✅ Comment saved successfully!";
-            setTimeout(() => {
-              feedback.style.display = "none";
-            }, 2000);
-            calendar.refetchEvents();
-          })
-          .catch(err => {
-            feedback.style.background = "#f8d7da";
-            feedback.style.color = "#721c24";
-            feedback.textContent = "❌ Error saving comment: " + err.message;
-          })
-          .finally(() => {
-            btn.disabled = false;
-            btn.textContent = "💾 Save Comment";
-          });
-      });
-
-      document.getElementById("updateActivityBtn").addEventListener("click", function () {
-        document.getElementById("detailsModal").style.display = "none";
-        openUpdateModal(selectedEvent.extendedProps, selectedEvent.id);
-      });
-
-      document.getElementById("assignPersonBtn").addEventListener("click", function () {
-        document.getElementById("detailsModal").style.display = "none";
-        openAssignModal(selectedEvent.extendedProps);
-      });
-
-      document.getElementById("closeDetailsBtn").addEventListener("click", function () {
-        document.getElementById("detailsModal").style.display = "none";
-        document.body.classList.remove("modal-open");
-      });
 
       window.addEventListener("load", function () {
 
