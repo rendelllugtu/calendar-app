@@ -581,6 +581,17 @@ async function apiCall(action, payload = {}) {
       let calendar;
       let currentRowId = null;
 
+      const statusColors = {
+        "conducted": "#28a745",     // green
+        "assigned": "#3788d8",      // blue
+        "unassigned": "#3788d8",    // blue
+        "not conducted": "#dc3545", // red
+        "rescheduled": "#ffc107",   // yellow
+        "denied": "#dc3545",   // red
+        "cancelled": "#6c757d",     // grey
+        "referred": "#fd7e14"       // orange
+      };
+
       function openUpdateModal(details, rowId) {
 
   currentRowId = rowId;
@@ -623,8 +634,8 @@ document.getElementById("referredActivities").innerText=data.referred || 0;
 
 renderActivityTypes(data.byType);
 
-window.municipalityData=data.byMunicipality;
-window.staffData=data.byStaff;
+window.municipalityData=data.byMunicipalityStatus;
+window.staffData=data.byStaffStatus;
 
 });
 
@@ -679,19 +690,30 @@ return;
 
 let html="";
 
-/* SORT BY VALUE DESCENDING */
-const sorted = Object.entries(data)
-.sort((a,b)=>b[1]-a[1]);
+// Calculate totals and sort
+const totals = {};
+Object.entries(data).forEach(([mun, statuses]) => {
+  totals[mun] = Object.values(statuses).reduce((sum, v) => sum + v, 0);
+});
 
-sorted.forEach(([name,val])=>{
+const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
 
-html+=`
-<div style="margin:6px 0">
-<strong>${toTitleCase(name)}</strong>
-<div style="background:#3788d8;height:8px;width:${val*12}px"></div>
-${val}
-</div>
-`;
+sorted.forEach(([name,total])=>{
+
+html += `<div style="margin:10px 0; padding:8px; border:1px solid #ddd; border-radius:4px;">
+<strong>${toTitleCase(name)}</strong> (Total: ${total})<br>`;
+
+const statuses = data[name] || {};
+Object.entries(statuses).forEach(([status, count]) => {
+  const color = statusColors[status.toLowerCase()] || "#ccc";
+  html += `<div style="margin:4px 0; display:flex; align-items:center;">
+    <span style="width:100px; font-size:12px;">${toTitleCase(status)}:</span>
+    <div style="background:${color}; height:8px; width:${count*10}px; margin-right:8px;"></div>
+    ${count}
+  </div>`;
+});
+
+html += `</div>`;
 
 });
 
@@ -724,19 +746,30 @@ return;
 
 let html="";
 
-/* SORT BY VALUE DESCENDING */
-const sorted = Object.entries(data)
-.sort((a,b)=>b[1]-a[1]);
+// Calculate totals and sort
+const totals = {};
+Object.entries(data).forEach(([staff, statuses]) => {
+  totals[staff] = Object.values(statuses).reduce((sum, v) => sum + v, 0);
+});
 
-sorted.forEach(([name,val])=>{
+const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
 
-html+=`
-<div style="margin:6px 0">
-<strong>${toTitleCase(name)}</strong>
-<div style="background:#28a745;height:8px;width:${val*12}px"></div>
-${val}
-</div>
-`;
+sorted.forEach(([name,total])=>{
+
+html += `<div style="margin:10px 0; padding:8px; border:1px solid #ddd; border-radius:4px;">
+<strong>${toTitleCase(name)}</strong> (Total: ${total})<br>`;
+
+const statuses = data[name] || {};
+Object.entries(statuses).forEach(([status, count]) => {
+  const color = statusColors[status.toLowerCase()] || "#ccc";
+  html += `<div style="margin:4px 0; display:flex; align-items:center;">
+    <span style="width:100px; font-size:12px;">${toTitleCase(status)}:</span>
+    <div style="background:${color}; height:8px; width:${count*10}px; margin-right:8px;"></div>
+    ${count}
+  </div>`;
+});
+
+html += `</div>`;
 
 });
 
