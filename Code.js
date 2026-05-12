@@ -410,6 +410,7 @@ function updateActivityStatus(rowId, status, comment, photos, gps) {
     const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
 
     sh.getRange(row, 19).setValue(status);
+    sh.getRange(row, 22).setValue(comment || "");
 
     if (gps && gps.lat && gps.lon) {
       verifyMunicipalityFromGPS_(row, gps);

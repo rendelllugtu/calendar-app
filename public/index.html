@@ -1097,6 +1097,7 @@ peopleList.forEach(p => {
           <div><strong>Assigned:</strong> ${details.assigned || "Unassigned"}</div>
           <div><strong>Municipality:</strong> ${details.municipality || "N/A"}</div>
           <div><strong>End User:</strong> ${details.endUser || ""}</div>
+          ${details.comment ? `<div><strong>Comment:</strong> ${details.comment}</div>` : ''}
         `;
 
         tooltip.style.display = "block";
