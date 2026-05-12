@@ -234,6 +234,7 @@ function getCalendarData() {
         endUser: r[1],
         municipality: r[4],
         activityTitle: r[8],
+        comment: r[21] || "",
         personIsOnLeave: personIsOnLeave  // Add the leave status to extendedProps
       }
     });
@@ -403,7 +404,7 @@ PMNP RPMO CALABARZON
 /*************************************************************
  * UPDATE ACTIVITY STATUS + PHOTO UPLOAD
  *************************************************************/
-function updateActivityStatus(rowId, status, photos, gps) {
+function updateActivityStatus(rowId, status, comment, photos, gps) {
   try {
     const row = Number(rowId);
     const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
