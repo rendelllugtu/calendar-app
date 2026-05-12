@@ -1124,8 +1124,10 @@ peopleList.forEach(p => {
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
-      const choice = confirm(
-  `You clicked "${details.activityTitle || info.event.title}"\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
+  const commentText = details.comment ? `\nComment: ${details.comment}` : '';
+
+  const choice = confirm(
+`You clicked "${details.activityTitle || info.event.title}"${commentText}\n\nPress OK to Update Activity\nPress Cancel to Assign Person.`
 );
 
       if (choice) openUpdateModal(details, info.event.id);
