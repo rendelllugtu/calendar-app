@@ -70,9 +70,12 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: false,
+      message: err.message
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -186,7 +189,9 @@ function getCalendarData() {
     const assigned = r[17] || "Unassigned";
     const status = r[18] || "";  // 🔥 STATUS COLUMN (Column 19 in sheet)
 
-    people.add(assigned);
+    if (!assigned.toLowerCase().includes("cecille lumbria")) {
+      people.add(assigned);
+    }
 
     // 🔥 Default color (Assigned / Pending)
     let bgColor = "#3788d8"; // blue
@@ -293,7 +298,7 @@ if (regionalSheet) {
 
 }
 
-  return { events, people: [...people].sort() };
+  return { events, people: [...people].sort().filter(p => p !== "Cecille Lumbria") };
 }
 
 /*************************************************************
@@ -418,7 +423,14 @@ function updateComment(rowId, comment) {
 
 function updateActivityStatus(rowId, status, comment, photos, gps) {
   try {
+
     const row = Number(rowId);
+
+    // 🔥 ✅ ADD THIS (VALIDATION — VERY IMPORTANT)
+    if (!row || isNaN(row)) {
+      throw new Error("Invalid rowId: " + rowId);
+    }
+
     const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
 
     sh.getRange(row, 19).setValue(status);
@@ -431,7 +443,10 @@ function updateActivityStatus(rowId, status, comment, photos, gps) {
     if (photos && photos.length) {
       const folder = DriveApp.getFolderById(PHOTOS_FOLDER_ID);
 
-      photos.slice(0,3).forEach((p, i) => {
+      for (let i = 0; i < Math.min(photos.length, 3); i++) {
+
+        const p = photos[i];
+
         const blob = Utilities.newBlob(
           Utilities.base64Decode(p.data),
           p.mimeType,
@@ -440,13 +455,24 @@ function updateActivityStatus(rowId, status, comment, photos, gps) {
 
         const file = folder.createFile(blob);
 
-        file.setSharing(
-          DriveApp.Access.ANYONE_WITH_LINK,
-          DriveApp.Permission.VIEW
-        );
+        const url = file.getUrl();
 
-        sh.getRange(row, 21 + i).setValue(file.getUrl());
-      });
+        // 🔥 ✅ ADD THESE DEBUG LOGS
+        Logger.log("Row: " + row);
+        Logger.log("Column: " + (21 + i));
+        Logger.log("URL: " + url);
+
+        // 🔥 ✅ SAFER WRITE
+        const cell = sh.getRange(row, 21 + i);
+
+        if (!cell) {
+          throw new Error("Invalid range at row " + row);
+        }
+
+        cell.setValue(url);
+
+        SpreadsheetApp.flush();
+      }
     }
 
     if (status && status.toLowerCase() === "conducted") {
@@ -866,6 +892,36 @@ function getUnavailableStaffForDate(rowId) {
     });
   }
 
+  // 🔥 CHECK REGIONAL ACTIVITIES
+  const regionalSheet = SpreadsheetApp.getActive().getSheetByName("Regional Activities");
+  if (regionalSheet) {
+
+    const regionalData = regionalSheet.getDataRange().getValues();
+    regionalData.shift();
+
+    regionalData.forEach(r => {
+
+      const assigned = String(r[4] || "").trim();
+      if (!assigned) return;
+
+      const regionalStart = new Date(r[1]);
+      const regionalEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
+
+      regionalStart.setHours(0,0,0,0);
+      regionalEnd.setHours(23,59,59,999);
+
+      if (
+        activityStart <= regionalEnd &&
+        activityEnd >= regionalStart
+      ) {
+        assigned.split(",").forEach(name => {
+          unavailable.add(name.trim().toLowerCase());
+        });
+      }
+
+    });
+  }
+
   Logger.log("Unavailable: " + JSON.stringify([...unavailable]));
 
   return [...unavailable];
@@ -914,7 +970,9 @@ function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
     regionalData.shift();
 
     regionalData.forEach(r => {
-      const staffName = String(r[0]).trim().toLowerCase();
+      const assigned = String(r[4] || "").trim();
+      if (!assigned) return;
+
       const regionalStart = new Date(r[1]);
       const regionalEnd = r[2] ? new Date(r[2]) : new Date(r[1]);
 
@@ -927,7 +985,9 @@ function getUnavailableStaffForDateRange(startDateStr, endDateStr) {
         while (current <= regionalEnd) {
           const month = current.getMonth() + 1;
           const day = current.getDate();
-          unavailable.push(staffName + '|' + month + '-' + day);
+          assigned.split(",").forEach(name => {
+            unavailable.push(name.trim().toLowerCase() + '|' + month + '-' + day);
+          });
           current.setDate(current.getDate() + 1);
         }
       }

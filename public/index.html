@@ -1065,7 +1065,7 @@ peopleList.forEach(p => {
   document.getElementById("cancelUpdate").addEventListener("click", function () {
     document.body.classList.remove("modal-open");
     document.getElementById("updateModal").style.display = "none";
-    document.getElementById("photoInput").value = "";
+    document.getElementById("photoUpload").value = "";
     document.getElementById("photoPreview").innerHTML = "";
   });
 
@@ -1092,19 +1092,19 @@ peopleList.forEach(p => {
     const statusColors = {
       "Conducted": "#28a745",     // green
       "Assigned": "#3788d8",      // blue
-      "Unassigned": "#3788d8",    // blue
+      "Unassigned": "#ffc107",    // yellow
       "Not Conducted": "#dc3545", // red
-      "Rescheduled": "#ffc107",   // yellow
+      "Rescheduled": "#6c757d",   // grey
       "Denied": "#dc3545",   // red
       "Cancelled": "#6c757d"      // grey
     };
 
     const coloredEvents = data.events.map(ev => {
 
-      const status = ev.extendedProps?.status || "Assigned";
-      const hasComment = ev.extendedProps?.comment && ev.extendedProps.comment.trim();
+      let status = ev.extendedProps?.status || "";
+      const assigned = ev.extendedProps?.assigned || "";
 
-      let title = ev.title;
+        let title = ev.title;
 
       if (status === "Conducted") title = title;
       if (status === "Rescheduled") title = "🔁 " + title;
@@ -1112,7 +1112,9 @@ peopleList.forEach(p => {
       if (status === "Not Conducted") title = "⚠ " + title;
       if (status === "Denied") title = "⚠ " + title;
 
-      if (hasComment) title += " 📝";
+      if (!assigned || assigned === "Unassigned") {
+    status = "Unassigned";
+  }
 
       return {
         ...ev,
@@ -1359,10 +1361,15 @@ personFilter.addEventListener("change", function () {
 
     console.log("Server response:", res);
 
-    if (!res.success) {
-      alert("Error: " + (res.message || "Unknown error"));
-      return;
-    }
+    if (!res || res.error) {
+  alert("Error: " + (res?.error || "Unknown error"));
+  return;
+}
+
+  if (!res.success) {
+  alert("Error: " + (res.message || "Unknown error"));
+  return;
+}
 
     alert(res.message);
 
