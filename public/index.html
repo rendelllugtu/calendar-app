@@ -497,11 +497,13 @@ border-radius:3px;
       <label for="detailsComment" style="font-weight:bold; display:flex; align-items:center; gap:5px;">
         📝 Activity Notes/Comments
         <span id="commentCounter" style="font-size:12px; color:#666;">(0/500)</span>
+        <small style="font-weight:normal; color:#888;">(Ctrl+Enter to save)</small>
       </label>
       <textarea id="detailsComment" rows="3" placeholder="Add notes, updates, or feedback about this activity..." maxlength="500" style="width:100%; resize:vertical; min-height:60px;"></textarea>
     </div>
     <div id="commentFeedback" style="margin:10px 0; display:none; padding:8px; border-radius:4px;"></div>
     <div style="margin-top:15px;text-align:right;">
+      <button class="btn" id="clearCommentBtn" style="background:#ffc107; color:#000;">🗑 Clear</button>
       <button class="btn" id="saveCommentBtn">💾 Save Comment</button>
       <button class="btn" id="updateActivityBtn">🔄 Update Activity</button>
       <button class="btn" id="assignPersonBtn">👤 Assign Person</button>
@@ -624,6 +626,9 @@ async function apiCall(action, payload = {}) {
   // Auto-resize
   commentTextarea.style.height = 'auto';
   commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
+
+  // Focus on comment for priority
+  setTimeout(() => commentTextarea.focus(), 100);
 }
 
       function openUpdateModal(details, rowId) {
@@ -1520,6 +1525,22 @@ personFilter.addEventListener("change", function () {
         updateCommentCounter();
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
+      });
+
+      // Keyboard shortcut: Ctrl+Enter to save comment
+      document.getElementById("detailsComment").addEventListener("keydown", function(e) {
+        if (e.ctrlKey && e.key === "Enter") {
+          e.preventDefault();
+          document.getElementById("saveCommentBtn").click();
+        }
+      });
+
+      // Clear comment
+      document.getElementById("clearCommentBtn").addEventListener("click", function () {
+        if (confirm("Clear the comment?")) {
+          document.getElementById("detailsComment").value = "";
+          updateCommentCounter();
+        }
       });
 
       // Details modal buttons
