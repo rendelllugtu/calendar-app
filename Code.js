@@ -938,17 +938,14 @@ denied:0,
 referred:0,
 byType:{},
 byMunicipality:{},
-byStaff:{},
-byMunicipalityStatus:{},
-byStaffStatus:{}
+byStaff:{}
 };
 
 data.forEach(r=>{
 
 stats.total++;
 
-let status = (r[18] || "").toString().trim().toLowerCase();
-if (!status) status = "assigned";
+const status = (r[18] || "").toString().trim().toLowerCase();
 const assigned = (r[17] || "").toString().trim();
 let type = (r[6] || "").toString().trim().toLowerCase();
 let municipality = (r[4] || "").toString().trim().toLowerCase();
@@ -1002,10 +999,6 @@ municipality = municipality
 
 stats.byMunicipality[municipality]=(stats.byMunicipality[municipality]||0)+1;
 
-// Status breakdown
-if (!stats.byMunicipalityStatus[municipality]) stats.byMunicipalityStatus[municipality] = {};
-stats.byMunicipalityStatus[municipality][status] = (stats.byMunicipalityStatus[municipality][status] || 0) + 1;
-
 }
 
 
@@ -1021,10 +1014,6 @@ const key=name.trim().toLowerCase();
 if(!key) return;
 
 stats.byStaff[key]=(stats.byStaff[key]||0)+1;
-
-// Status breakdown
-if (!stats.byStaffStatus[key]) stats.byStaffStatus[key] = {};
-stats.byStaffStatus[key][status] = (stats.byStaffStatus[key][status] || 0) + 1;
 
 });
 
