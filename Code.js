@@ -57,11 +57,15 @@ function doPost(e) {
       result = getUnavailableStaffForDate(body.rowId);
     }
 
-    if (body.action === "getUnavailableStaffForDateRange") {
-      result = getUnavailableStaffForDateRange(body.startDate, body.endDate);
-    }
+   if (body.action === "getUnavailableStaffForDateRange") {
+     result = getUnavailableStaffForDateRange(body.startDate, body.endDate);
+   }
 
-    return ContentService
+   if (body.action === "updateComment") {
+     result = updateComment(body.rowId, body.comment);
+   }
+
+   return ContentService
       .createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
 
@@ -404,6 +408,14 @@ PMNP RPMO CALABARZON
 /*************************************************************
  * UPDATE ACTIVITY STATUS + PHOTO UPLOAD
  *************************************************************/
+function updateComment(rowId, comment) {
+  const row = Number(rowId);
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  sh.getRange(row, 22).setValue(comment || "");
+  SpreadsheetApp.flush();
+  return { success: true, message: "Comment updated successfully" };
+}
+
 function updateActivityStatus(rowId, status, comment, photos, gps) {
   try {
     const row = Number(rowId);

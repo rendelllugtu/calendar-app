@@ -486,6 +486,23 @@ border-radius:3px;
   </div>
 </div>
 
+<!-- Activity Details Modal -->
+
+<div id="detailsModal" class="modal">
+  <div class="modal-content">
+    <h3>Activity Details</h3>
+    <div id="detailsInfo"></div>
+    <p><strong>Comment:</strong></p>
+    <textarea id="detailsComment" rows="3" placeholder="Add or edit comment..."></textarea>
+    <div style="margin-top:15px;text-align:right;">
+      <button class="btn" id="saveCommentBtn">Save Comment</button>
+      <button class="btn" id="updateActivityBtn">Update Activity</button>
+      <button class="btn" id="assignPersonBtn">Assign Person</button>
+      <button type="button" class="btn" style="background:#888;" id="closeDetailsBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Update Activity Modal -->
 
 <div id="updateModal" class="modal">
@@ -575,6 +592,26 @@ async function apiCall(action, payload = {}) {
       let selectedEvent = null;
       let calendar;
       let currentRowId = null;
+
+      function openDetailsModal(details) {
+
+  // 🔒 Disable background clicks
+  document.body.classList.add("modal-open");
+
+  const modal = document.getElementById("detailsModal");
+  modal.style.display = "block";
+
+  document.getElementById("detailsInfo").innerHTML = `
+    <strong>${details.activityTitle}</strong><br>
+    Type: ${details.type}<br>
+    Assigned: ${details.assigned || "Unassigned"}<br>
+    Municipality: ${details.municipality}<br>
+    End User: ${details.endUser}<br>
+    Status: ${details.status || "Assigned"}
+  `;
+
+  document.getElementById("detailsComment").value = details.comment || "";
+}
 
       function openUpdateModal(details, rowId) {
 
@@ -1117,10 +1154,15 @@ peopleList.forEach(p => {
     },
 
     eventClick: function(info) {
-      
+
       if (info.event.extendedProps.regional) {
     return;
   }
+      selectedEvent = info.event;
+      const details = info.event.extendedProps;
+
+      openDetailsModal(details);
+    }
       selectedEvent = info.event;
       const details = info.event.extendedProps;
 
@@ -1446,6 +1488,33 @@ personFilter.addEventListener("change", function () {
           document.querySelectorAll(".dropdown").forEach(dd => dd.classList.remove("show"));
         }
       };
+
+      // Details modal buttons
+      document.getElementById("saveCommentBtn").addEventListener("click", function () {
+        const comment = document.getElementById("detailsComment").value;
+        apiCall("updateComment", { rowId: selectedEvent.extendedProps.row, comment: comment })
+          .then(() => {
+            document.getElementById("detailsModal").style.display = "none";
+            document.body.classList.remove("modal-open");
+            calendar.refetchEvents();
+          })
+          .catch(err => alert("Error saving comment: " + err.message));
+      });
+
+      document.getElementById("updateActivityBtn").addEventListener("click", function () {
+        document.getElementById("detailsModal").style.display = "none";
+        openUpdateModal(selectedEvent.extendedProps, selectedEvent.id);
+      });
+
+      document.getElementById("assignPersonBtn").addEventListener("click", function () {
+        document.getElementById("detailsModal").style.display = "none";
+        openAssignModal(selectedEvent.extendedProps);
+      });
+
+      document.getElementById("closeDetailsBtn").addEventListener("click", function () {
+        document.getElementById("detailsModal").style.display = "none";
+        document.body.classList.remove("modal-open");
+      });
 
       window.addEventListener("load", function () {
 
