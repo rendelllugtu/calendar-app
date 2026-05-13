@@ -1023,7 +1023,9 @@ data.forEach(r=>{
 
 stats.total++;
 
-const status = (r[18] || "").toString().trim().toLowerCase();
+let status = (r[18] || "").toString().trim().toLowerCase();
+status = status.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+if (!status && assigned === "Unassigned") status = "Unassigned";
 const assigned = (r[17] || "").toString().trim();
 let type = (r[6] || "").toString().trim().toLowerCase();
 let municipality = (r[4] || "").toString().trim().toLowerCase();

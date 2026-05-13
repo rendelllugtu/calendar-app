@@ -1079,15 +1079,16 @@ peopleList.forEach(p => {
   apiCall("getCalendarData")
   .then(data => {
 
-    const statusColors = {
-      "Conducted": "#28a745",     // green
-      "Assigned": "#3788d8",      // blue
-      "Unassigned": "#ffc107",    // blue
-      "Not Conducted": "#dc3545", // red
-      "Rescheduled": "#ffc107",   // yellow
-      "Denied": "#dc3545",   // red
-      "Cancelled": "#6c757d"      // grey
-    };
+      const statusColors = {
+        "Conducted": "#28a745",     // green
+        "Assigned": "#3788d8",      // blue
+        "Unassigned": "#ffc107",    // yellow
+        "Not Conducted": "#dc3545", // red
+        "Rescheduled": "#ffc107",   // yellow
+        "Denied": "#dc3545",   // red
+        "Cancelled": "#6c757d",     // grey
+        "Referred": "#fd7e14"       // orange
+      };
 
     const coloredEvents = data.events.map(ev => {
 
