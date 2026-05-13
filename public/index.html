@@ -1073,7 +1073,9 @@ peopleList.forEach(p => {
 
     const coloredEvents = data.events.map(ev => {
 
-      const status = ev.extendedProps?.status || "Assigned";
+    const assigned = ev.extendedProps?.assigned || "";
+    const status = ev.extendedProps?.status ||
+        (assigned === "Unassigned" || !assigned ? "Unassigned" : "Assigned");
 
       let title = ev.title;
 
