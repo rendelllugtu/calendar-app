@@ -96,7 +96,7 @@ const SUMMARY_FOLDER_ID = "1Kok5861aFAQzhtvnNc8O1aLVZb7YGFYb";
 const PHOTOS_FOLDER_ID = "1788VLYmDMyYzk7Rxdu1MOSAM12A6s80g";
 const EVALUATION_FORM_LINK = "https://docs.google.com/spreadsheets/d/1BZ9gXDqmD7GZjZKzjlglwXYJ2lkXXR-ijeFKEE_JXao/edit?resourcekey=&gid=1157944124#gid=1157944124";
 
-const GPS_JSON_COL = 20; // Column AB – stores municipality GPS JSON
+const GPS_JSON_COL = 27; // Column AB – stores municipality GPS JSON
 
 /*************************************************************
  * 🔹 MAP RP NAME → RP EMAIL
@@ -235,7 +235,7 @@ function getCalendarData() {
       allDay: true,
       backgroundColor: bgColor,
       borderColor: bgColor,
-      extendedProps: {
+        extendedProps: {
         row: i + 2,
         type: r[6],
         assigned: assigned,
@@ -243,7 +243,7 @@ function getCalendarData() {
         endUser: r[1],
         municipality: r[4],
         activityTitle: r[8],
-        comment: r[21] || "",
+        comment: r[27] || "",
         personIsOnLeave: personIsOnLeave  // Add the leave status to extendedProps
       }
     });
@@ -416,7 +416,7 @@ PMNP RPMO CALABARZON
 function updateComment(rowId, comment) {
   const row = Number(rowId);
   const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  sh.getRange(row, 22).setValue(comment || "");
+  sh.getRange(row, 28).setValue(comment || "");
   SpreadsheetApp.flush();
   return { success: true, message: "Comment updated successfully" };
 }
@@ -434,7 +434,7 @@ function updateActivityStatus(rowId, status, comment, photos, gps) {
     const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
 
     sh.getRange(row, 19).setValue(status);
-    sh.getRange(row, 22).setValue(comment || "");
+    sh.getRange(row, 28).setValue(comment || "");
 
     if (gps && gps.lat && gps.lon) {
       verifyMunicipalityFromGPS_(row, gps);
