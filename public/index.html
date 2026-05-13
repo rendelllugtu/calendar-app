@@ -475,15 +475,6 @@ border-radius:3px;
 
 <input type="hidden" id="assignHidden" />
 
-<p><strong>Comment:</strong></p>
-<textarea id="assignComment" rows="3" placeholder="Add a comment about this assignment..." maxlength="500"></textarea>
-<div style="margin-top:5px;">
-  <label style="display:flex; align-items:center; gap:5px; font-size:14px;">
-    <input type="checkbox" id="deleteCommentCheckAssign">
-    Delete comment
-  </label>
-</div>
-
 <div style="margin-top:15px;text-align:right;">
   <button class="btn" id="saveAssign">Save</button>
   <button type="button" class="btn" style="background:#888;" id="cancelAssign">
@@ -1047,17 +1038,7 @@ peopleList.forEach(p => {
     }
   });
 
-  // Comment delete checkbox for assign modal
-  document.getElementById("deleteCommentCheckAssign").addEventListener("change", function () {
-    const textarea = document.getElementById("assignComment");
-    if (this.checked) {
-      textarea.disabled = true;
-      textarea.placeholder = "Comment will be deleted";
-    } else {
-      textarea.disabled = false;
-      textarea.placeholder = "Add a comment about this assignment...";
-    }
-  });
+
 
 });
 
@@ -1216,21 +1197,21 @@ personFilter.addEventListener("change", function () {
 
   showLoading(true);
 
-  const deleteChecked = document.getElementById("deleteCommentCheckAssign").checked;
-  const comment = deleteChecked ? "" : document.getElementById("assignComment").value;
-
-  console.log("Assign modal: deleteChecked =", deleteChecked, "comment =", comment);
-
   apiCall("updateAssignedPerson", {
     rowId: selectedEvent.extendedProps.row,
     people: newPerson
   })
   .then(function () {
-    // Save comment separately
-    return apiCall("updateComment", {
-      rowId: selectedEvent.extendedProps.row,
-      comment: comment
-    });
+    document.getElementById("assignModal").style.display = "none";
+    calendar.refetchEvents();
+    setTimeout(renderRollingHeatmap, 300);
+    showLoading(false);
+  })
+  .catch(function (err) {
+    console.error(err);
+    showLoading(false);
+    alert("Error updating assignment.");
+  });
   })
   .then(function () {
     document.getElementById("assignModal").style.display = "none";
@@ -1395,10 +1376,6 @@ personFilter.addEventListener("change", function () {
 
   document.getElementById("assignInfo").innerText =
   `${details.activityTitle}\nAssigned: ${details.assigned || "Unassigned"}\nEnd User: ${details.endUser}`;
-
-  document.getElementById("assignComment").value = details.comment || "";
-  document.getElementById("deleteCommentCheckAssign").checked = false;
-  document.getElementById("assignComment").disabled = false;
 
   apiCall("getUnavailableStaffForDate", {
     rowId: details.row
