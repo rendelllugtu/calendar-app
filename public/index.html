@@ -1079,15 +1079,16 @@ peopleList.forEach(p => {
   apiCall("getCalendarData")
   .then(data => {
 
-    const statusColors = {
-      "Conducted": "#28a745",     // green
-      "Assigned": "#3788d8",      // blue
-      "Unassigned": "#3788d8",    // blue
-      "Not Conducted": "#dc3545", // red
-      "Rescheduled": "#ffc107",   // yellow
-      "Denied": "#dc3545",   // red
-      "Cancelled": "#6c757d"      // grey
-    };
+      const statusColors = {
+        "conducted": "#28a745",     // green
+        "assigned": "#3788d8",      // blue
+        "unassigned": "#ffc107",    // yellow
+        "not conducted": "#dc3545", // red
+        "rescheduled": "#ffc107",   // yellow
+        "denied": "#dc3545",   // red
+        "cancelled": "#6c757d",     // grey
+        "referred": "#fd7e14"       // orange
+      };
 
     const coloredEvents = data.events.map(ev => {
 
@@ -1218,6 +1219,8 @@ personFilter.addEventListener("change", function () {
   const deleteChecked = document.getElementById("deleteCommentCheckAssign").checked;
   const comment = deleteChecked ? "" : document.getElementById("assignComment").value;
 
+  console.log("Assign modal: deleteChecked =", deleteChecked, "comment =", comment);
+
   apiCall("updateAssignedPerson", {
     rowId: selectedEvent.extendedProps.row,
     people: newPerson
@@ -1249,6 +1252,8 @@ personFilter.addEventListener("change", function () {
   const status = document.getElementById("activityStatus").value;
   const deleteChecked = document.getElementById("deleteCommentCheckUpdate").checked;
   const comment = deleteChecked ? "" : document.getElementById("activityComment").value;
+
+  console.log("Update modal: deleteChecked =", deleteChecked, "comment =", comment);
   const photoInput = document.getElementById("photoUpload");
 
   if (!photoInput) {

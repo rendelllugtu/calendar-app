@@ -210,6 +210,10 @@ function getCalendarData() {
       bgColor = "#fd7e14"; // orange
     }
 
+    if (assigned === "Unassigned") {
+      bgColor = "#ffc107"; // yellow
+    }
+
     const title = `${titlePrefix}${r[6]} — ${assigned} (${r[1]})`;
 
     // Check if assigned staff is on leave during this activity's time period
